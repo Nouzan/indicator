@@ -1,0 +1,28 @@
+[package]
+name = "indicator"
+version = "0.1.0"
+edition = "2021"
+authors = ["Nouzan"]
+license = "MIT OR Apache-2.0"
+description = "Abstractions for stream aggregation, we call them `Indicator` s."
+repository = "https://github.com/Nouzan/indicator"
+keywords = ["stream", "no_std", "stream-processing", "aggregation"]
+
+[dependencies.arrayvec]
+version = "0.7"
+optional = true
+default-features = false
+
+[dependencies.time]
+version = "0.3"
+default-features = false
+
+[dev-dependencies.time]
+version = "0.3"
+default-features = false
+features = ["macros"]
+
+[features]
+default = ["std"]
+std = ["time/std"]
+array-vec = ["arrayvec"]

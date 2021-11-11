@@ -8,7 +8,7 @@ use crate::{Operator, TickValue, Tickable, TumblingWindow};
 pub use queue::{QueueCapAtLeast, TumblingQueue};
 
 /// Tumbling operation.
-pub trait Tumbling<I, Q: QueueCapAtLeast<LEN>, const LEN: usize> {
+pub trait TumblingOperation<I, Q: QueueCapAtLeast<LEN>, const LEN: usize> {
     /// Output type.
     type Output;
 
@@ -28,7 +28,7 @@ pub trait Tumbling<I, Q: QueueCapAtLeast<LEN>, const LEN: usize> {
     }
 }
 
-impl<F, I, O, Q: QueueCapAtLeast<LEN>, const LEN: usize> Tumbling<I, Q, LEN> for F
+impl<F, I, O, Q: QueueCapAtLeast<LEN>, const LEN: usize> TumblingOperation<I, Q, LEN> for F
 where
     F: FnMut(&Q, &mut Option<Q::Item>, I) -> O,
 {
@@ -62,7 +62,7 @@ impl<
         M: TumblingWindow,
         I: Tickable,
         Q: QueueCapAtLeast<LEN>,
-        P: Tumbling<I::Value, Q, LEN>,
+        P: TumblingOperation<I::Value, Q, LEN>,
         const LEN: usize,
     > Operator<I> for TumblingOperator<M, Q, P, LEN>
 {

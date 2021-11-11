@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use super::{QueueCapAtLeast, Tumbling};
+use super::{QueueCapAtLeast, TumblingOperation};
 
 /// Pure tumbling operation.
 pub trait PureTumbling<I, Q: QueueCapAtLeast<LEN>, const LEN: usize> {
@@ -19,8 +19,8 @@ pub trait PureTumbling<I, Q: QueueCapAtLeast<LEN>, const LEN: usize> {
 /// Pure tumbling operation.
 pub struct PureTumblingOperation<P: ?Sized>(PhantomData<fn() -> P>);
 
-impl<I, Q: QueueCapAtLeast<LEN>, P: PureTumbling<I, Q, LEN>, const LEN: usize> Tumbling<I, Q, LEN>
-    for PureTumblingOperation<P>
+impl<I, Q: QueueCapAtLeast<LEN>, P: PureTumbling<I, Q, LEN>, const LEN: usize>
+    TumblingOperation<I, Q, LEN> for PureTumblingOperation<P>
 {
     type Output = P::Output;
 

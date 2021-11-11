@@ -17,12 +17,18 @@ default-features = false
 version = "0.3"
 default-features = false
 
+[dependencies.futures]
+version = "0.3"
+optional = true
+default-features = false
+
 [dev-dependencies.time]
 version = "0.3"
 default-features = false
 features = ["macros"]
 
 [features]
-default = ["std"]
-std = ["time/std"]
+default = ["std", "stream", "arrayvec"]
+std = ["time/std", "futures/std"]
 array-vec = ["arrayvec"]
+stream = ["futures"]

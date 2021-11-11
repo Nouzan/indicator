@@ -1,10 +1,10 @@
 /// Tumbling-windowed operator.
 pub mod tumbling;
 
-/// [`Facet`] combinator of [`TickedOperator`](crate::TickedOperator)s.
+/// [`Facet`] combinator of ticked operators.
 pub mod facet;
 
-/// [`Map`] operator of [`TickedOperator`](crate::TickedOperator)s.
+/// [`Map`] operator of ticked operators.
 pub mod map;
 
 use crate::{Operator, Tickable};
@@ -12,14 +12,14 @@ pub use facet::Facet;
 #[cfg(feature = "std")]
 pub use facet::{facet_map_t, FacetMap};
 pub use map::Map;
-pub use tumbling::{queue::QueueCapAtLeast, Tumbling, TumblingOperator, TumblingQueue};
+pub use tumbling::{queue::QueueCapAtLeast, TumblingOperation, TumblingOperator, TumblingQueue};
 
 /// Ticked operator.
-pub trait TickedOperator<I: Tickable>: Operator<I>
+pub trait TickedOperatorExt<I: Tickable>: Operator<I>
 where
     <Self as Operator<I>>::Output: Tickable,
 {
-    /// Combine with the other [`TickedOperator`] to get a facet operator that keep the [`Tick`] unchanged.
+    /// Combine with the other tick operator to get a facet operator that keep the [`Tick`] unchanged.
     ///
     /// [`Tick`]: crate::Tick
     fn facet_t<P2: Operator<I>>(self, other: P2) -> Facet<Self, P2>
@@ -42,7 +42,7 @@ where
     }
 }
 
-impl<P, I: Tickable> TickedOperator<I> for P
+impl<P, I: Tickable> TickedOperatorExt<I> for P
 where
     P: Operator<I>,
     <P as Operator<I>>::Output: Tickable,

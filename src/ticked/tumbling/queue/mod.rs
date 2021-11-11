@@ -44,7 +44,7 @@ pub trait QueueCapAtLeast<const LEN: usize> {
     }
 }
 
-/// Queue used in [`Tumbling`](super::Tumbling).
+/// Queue used in [`TumblingOperation`](super::TumblingOperation).
 #[derive(Debug, Clone)]
 pub struct TumblingQueue<M: TumblingWindow, Q: QueueCapAtLeast<LEN>, const LEN: usize> {
     pub(super) mode: M,

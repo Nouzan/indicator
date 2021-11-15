@@ -3,7 +3,7 @@ use crate::{Operator, TickValue, Tickable};
 #[cfg(feature = "std")]
 pub use facet_map::{facet_map_t, FacetMap};
 
-/// [`Facet`] combinator of [`TickedOperator`](crate::TickedOperator).
+/// [`Facet`] combinator.
 #[derive(Debug, Clone, Copy)]
 pub struct Facet<P1, P2>(pub(super) P1, pub(super) P2);
 

@@ -1,6 +1,6 @@
 use crate::{Operator, TickValue, Tickable};
 
-/// [`Map`] operator for [`TickedOperator`](crate::TickedOperator).
+/// [`Map`] operator.
 #[derive(Debug, Clone, Copy)]
 pub struct Map<P, F> {
     pub(super) source: P,

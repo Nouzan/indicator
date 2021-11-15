@@ -1,4 +1,4 @@
-//! Abstractions for stream aggregation, which we call "Indicator" s.
+//! Abstractions for stream aggregation that we call "Indicator" s.
 //!
 //! This crate provides abstractions of different levels to build indicators:
 //!

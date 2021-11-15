@@ -2,20 +2,25 @@ use super::Operator;
 
 /// [`Map`] operator.
 #[derive(Debug, Clone, Copy)]
-pub struct Map<I, P, F> {
-    pub(super) source: P,
+pub struct Map<F> {
     pub(super) f: F,
-    pub(super) _input: std::marker::PhantomData<fn() -> I>,
 }
 
-impl<I, O, P, F> Operator<I> for Map<I, P, F>
+/// Create a [`Map`] operator.
+pub fn map<I, O, F>(f: F) -> Map<F>
 where
-    P: Operator<I>,
-    F: FnMut(P::Output) -> O,
+    F: FnMut(I) -> O,
+{
+    Map { f }
+}
+
+impl<I, O, F> Operator<I> for Map<F>
+where
+    F: FnMut(I) -> O,
 {
     type Output = O;
 
     fn next(&mut self, input: I) -> Self::Output {
-        (self.f)(self.source.next(input))
+        (self.f)(input)
     }
 }

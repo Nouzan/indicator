@@ -3,6 +3,7 @@ use super::tickable::Tickable;
 use time::OffsetDateTime;
 
 /// Value with timestamp.
+#[derive(Debug, Clone, Copy)]
 pub struct TickValue<T> {
     /// Tick.
     pub tick: Tick,

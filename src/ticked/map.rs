@@ -1,23 +1,25 @@
 use crate::{Operator, TickValue, Tickable};
 
-/// [`Map`] operator.
+/// [`Map`] operator for [`map_t`].
 #[derive(Debug, Clone, Copy)]
-pub struct Map<P, F> {
-    pub(super) source: P,
+pub struct Map<F> {
     pub(super) f: F,
 }
 
-impl<I, O, P, F> Operator<I> for Map<P, F>
+/// Create a [`Map`] ticked operator.
+pub fn map_t<F>(f: F) -> Map<F> {
+    Map { f }
+}
+
+impl<I, O, F> Operator<I> for Map<F>
 where
     I: Tickable,
-    P: Operator<I>,
-    P::Output: Tickable,
-    F: FnMut(<P::Output as Tickable>::Value) -> O,
+    F: FnMut(<I as Tickable>::Value) -> O,
 {
     type Output = TickValue<O>;
 
     fn next(&mut self, input: I) -> Self::Output {
-        let TickValue { tick, value } = self.source.next(input).into_tick_value();
+        let TickValue { tick, value } = input.into_tick_value();
 
         TickValue {
             tick,

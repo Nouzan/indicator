@@ -45,12 +45,16 @@ pub mod iter;
 pub mod stream;
 
 pub use iter::IndicatorIteratorExt;
-pub use operator::{IntoOperator, Operator, OperatorExt};
+pub use operator::{facet, map, IntoOperator, Operator, OperatorExt};
 pub use ticked::{
+    facet_t, map_t,
     tumbling::{tumbling, QueueCapAtLeast, TumblingOperation, TumblingOperator, TumblingQueue},
     TickedOperatorExt,
 };
 pub use window::{Period, Tick, TickValue, Tickable, TumblingWindow};
+
+#[cfg(feature = "std")]
+pub use ticked::facet_map_t;
 
 #[cfg(feature = "stream")]
 pub use stream::IndicatorStreamExt;

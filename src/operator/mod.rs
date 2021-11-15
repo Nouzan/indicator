@@ -7,8 +7,8 @@ pub mod facet;
 /// Map operator.
 pub mod map;
 
-use facet::Facet;
-use map::Map;
+pub use facet::{facet, Facet};
+pub use map::{map, Map};
 use then::Then;
 
 #[cfg(feature = "std")]
@@ -28,36 +28,32 @@ pub trait OperatorExt<I>: Operator<I> {
     /// Combine with another operator that uses `Self::Output` as input type.
     ///
     /// The result operator will perform the `other` operator after performing the `self`.
-    fn then<P2>(self, other: P2) -> Then<Self, P2>
+    fn then<P2>(self, other: P2) -> Then<I, Self, P2>
     where
         Self: Sized,
         P2: Operator<Self::Output>,
     {
-        Then(self, other)
+        Then(self, other, std::marker::PhantomData::default())
     }
 
     /// Combine with another operator with the same input type.
     ///
     /// The result operator will perform two operators simultaneously.
-    fn facet<P2>(self, other: P2) -> Facet<Self, P2>
+    fn facet<P2>(self, other: P2) -> Facet<I, Self, P2>
     where
         Self: Sized,
         P2: Operator<I>,
     {
-        Facet(self, other)
+        facet(self, other)
     }
 
     /// Map the output after performing the operator.
-    fn map<O, F>(self, f: F) -> Map<I, Self, F>
+    fn map<O, F>(self, f: F) -> Then<I, Self, Map<F>>
     where
         Self: Sized,
         F: FnMut(Self::Output) -> O,
     {
-        Map {
-            source: self,
-            f,
-            _input: std::marker::PhantomData::default(),
-        }
+        self.then(map(f))
     }
 }
 

@@ -7,11 +7,12 @@ pub mod facet;
 /// [`Map`] operator of ticked operators.
 pub mod map;
 
-use crate::{Operator, Tickable};
-pub use facet::Facet;
+use crate::operator::then::Then;
+use crate::{Operator, OperatorExt, Tickable};
 #[cfg(feature = "std")]
 pub use facet::{facet_map_t, FacetMap};
-pub use map::Map;
+pub use facet::{facet_t, Facet};
+pub use map::{map_t, Map};
 pub use tumbling::{queue::QueueCapAtLeast, TumblingOperation, TumblingOperator, TumblingQueue};
 
 /// Ticked operator.
@@ -22,23 +23,23 @@ where
     /// Combine with the other tick operator to get a facet operator that keep the [`Tick`] unchanged.
     ///
     /// [`Tick`]: crate::Tick
-    fn facet_t<P2: Operator<I>>(self, other: P2) -> Facet<Self, P2>
+    fn facet_t<P2: Operator<I>>(self, other: P2) -> Facet<I, Self, P2>
     where
         Self: Sized,
         <P2 as Operator<I>>::Output: Tickable,
     {
-        Facet(self, other)
+        facet_t(self, other)
     }
 
     /// Transform the value of the output but keep the [`Tick`] unchanged.
     ///
     /// [`Tick`]: crate::Tick
-    fn map_t<O, F>(self, f: F) -> Map<Self, F>
+    fn map_t<O, F>(self, f: F) -> Then<I, Self, Map<F>>
     where
         Self: Sized,
         F: FnMut(<Self::Output as Tickable>::Value) -> O,
     {
-        Map { source: self, f }
+        self.then(map_t(f))
     }
 }
 

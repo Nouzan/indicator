@@ -2,9 +2,13 @@ use super::Operator;
 
 /// [`Then`] combinator.
 #[derive(Debug, Clone, Copy)]
-pub struct Then<P1, P2>(pub(crate) P1, pub(crate) P2);
+pub struct Then<I, P1, P2>(
+    pub(crate) P1,
+    pub(crate) P2,
+    pub(crate) std::marker::PhantomData<fn() -> I>,
+);
 
-impl<I, P1, P2> Operator<I> for Then<P1, P2>
+impl<I, P1, P2> Operator<I> for Then<I, P1, P2>
 where
     P1: Operator<I>,
     P2: Operator<P1::Output>,

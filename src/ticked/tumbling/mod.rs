@@ -66,8 +66,8 @@ impl<
 
 /// Create a tumbling operator from a tumbling operation.
 pub fn tumbling<I, P, Q: QueueCapAtLeast<LEN>, M: TumblingWindow, const LEN: usize>(
-    op: P,
     mode: M,
+    op: P,
 ) -> TumblingOperator<M, Q, P, LEN>
 where
     P: TumblingOperation<I, Q, LEN>,

@@ -5,9 +5,18 @@ pub use facet_map::{facet_map_t, FacetMap};
 
 /// [`Facet`] combinator.
 #[derive(Debug, Clone, Copy)]
-pub struct Facet<P1, P2>(pub(super) P1, pub(super) P2);
+pub struct Facet<I, P1, P2>(
+    pub(super) P1,
+    pub(super) P2,
+    pub(super) std::marker::PhantomData<fn() -> I>,
+);
 
-impl<I: Tickable + Clone, P1, P2> Operator<I> for Facet<P1, P2>
+/// Combine two ticked operators into a [`Facet`] ticked operator.
+pub fn facet_t<I, P1, P2>(op1: P1, op2: P2) -> Facet<I, P1, P2> {
+    Facet(op1, op2, std::marker::PhantomData::default())
+}
+
+impl<I: Tickable + Clone, P1, P2> Operator<I> for Facet<I, P1, P2>
 where
     P1: Operator<I>,
     P2: Operator<I>,
@@ -37,9 +46,9 @@ mod facet_map {
 
     /// [`FacetMap`] combinator.
     #[derive(Debug, Clone)]
-    pub struct FacetMap<P>(HashMap<String, P>);
+    pub struct FacetMap<I, P>(HashMap<String, P>, std::marker::PhantomData<fn() -> I>);
 
-    impl<I, P> Operator<I> for FacetMap<P>
+    impl<I, P> Operator<I> for FacetMap<I, P>
     where
         I: Tickable + Clone,
         P: Operator<I>,
@@ -63,10 +72,13 @@ mod facet_map {
 
     /// Create an operator that apply different operators to the same input,
     /// and return the collections of outputs as its output.
-    pub fn facet_map_t<It, P>(ops: It) -> FacetMap<P>
+    pub fn facet_map_t<I, It, P>(ops: It) -> FacetMap<I, P>
     where
         It: IntoIterator<Item = (String, P)>,
     {
-        FacetMap(ops.into_iter().collect())
+        FacetMap(
+            ops.into_iter().collect(),
+            std::marker::PhantomData::default(),
+        )
     }
 }

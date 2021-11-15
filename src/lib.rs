@@ -51,3 +51,6 @@ pub use ticked::{
     TickedOperatorExt,
 };
 pub use window::{Period, Tick, TickValue, Tickable, TumblingWindow};
+
+#[cfg(feature = "stream")]
+pub use stream::IndicatorStreamExt;

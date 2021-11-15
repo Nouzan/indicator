@@ -48,12 +48,16 @@ pub trait OperatorExt<I>: Operator<I> {
     }
 
     /// Map the output after performing the operator.
-    fn map<O, F>(self, f: F) -> Map<Self, F>
+    fn map<O, F>(self, f: F) -> Map<I, Self, F>
     where
         Self: Sized,
         F: FnMut(Self::Output) -> O,
     {
-        Map { source: self, f }
+        Map {
+            source: self,
+            f,
+            _input: std::marker::PhantomData::default(),
+        }
     }
 }
 

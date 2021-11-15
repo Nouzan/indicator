@@ -42,3 +42,5 @@ pub trait IndicatorStreamExt: Stream {
         Operated { source: self, op }
     }
 }
+
+impl<St: Stream> IndicatorStreamExt for St {}

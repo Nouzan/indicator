@@ -35,10 +35,14 @@ pub trait QueueCapAtLeast<const LEN: usize> {
     fn enque_and_deque_overflow(&mut self, item: Self::Item) -> Option<Self::Item> {
         if self.is_reach() {
             let oldest = self.deque();
-            self.enque(item);
+            if LEN > 0 {
+                self.enque(item);
+            }
             oldest
         } else {
-            self.enque(item);
+            if LEN > 0 {
+                self.enque(item);
+            }
             None
         }
     }

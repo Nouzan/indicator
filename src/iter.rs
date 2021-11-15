@@ -30,3 +30,5 @@ pub trait IndicatorIteratorExt: Iterator {
         Operated { source: self, op }
     }
 }
+
+impl<It: Iterator> IndicatorIteratorExt for It {}

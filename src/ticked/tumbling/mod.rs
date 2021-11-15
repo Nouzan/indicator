@@ -14,18 +14,6 @@ pub trait TumblingOperation<I, Q: QueueCapAtLeast<LEN>, const LEN: usize> {
 
     /// Call.
     fn call(&mut self, q: &Q, y: &mut Option<Q::Item>, x: I) -> Self::Output;
-
-    /// Convert into an operator.
-    fn into_operator<M: TumblingWindow>(self, mode: M) -> TumblingOperator<M, Q, Self, LEN>
-    where
-        Self: Sized,
-    {
-        TumblingOperator {
-            queue: TumblingQueue::new(mode),
-            acc: None,
-            op: self,
-        }
-    }
 }
 
 impl<F, I, O, Q: QueueCapAtLeast<LEN>, const LEN: usize> TumblingOperation<I, Q, LEN> for F
@@ -73,5 +61,20 @@ impl<
         self.queue.enque_or_ignore(&tick, &mut self.acc);
         let res = self.op.call(&self.queue.queue, &mut self.acc, value);
         TickValue { tick, value: res }
+    }
+}
+
+/// Create a tumbling operator from a tumbling operation.
+pub fn tumbling<I, P, Q: QueueCapAtLeast<LEN>, M: TumblingWindow, const LEN: usize>(
+    op: P,
+    mode: M,
+) -> TumblingOperator<M, Q, P, LEN>
+where
+    P: TumblingOperation<I, Q, LEN>,
+{
+    TumblingOperator {
+        queue: TumblingQueue::new(mode),
+        acc: None,
+        op,
     }
 }

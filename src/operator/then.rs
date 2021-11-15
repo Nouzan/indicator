@@ -2,7 +2,7 @@ use super::Operator;
 
 /// [`Then`] combinator.
 #[derive(Debug, Clone, Copy)]
-pub struct Then<P1, P2>(pub(super) P1, pub(super) P2);
+pub struct Then<P1, P2>(pub(crate) P1, pub(crate) P2);
 
 impl<I, P1, P2> Operator<I> for Then<P1, P2>
 where

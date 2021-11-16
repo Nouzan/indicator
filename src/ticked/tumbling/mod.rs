@@ -1,9 +1,6 @@
 /// Queue.
 pub mod queue;
 
-/// Pure tumbling operation.
-pub mod pure;
-
 use crate::{Operator, TickValue, Tickable, TumblingWindow};
 pub use queue::{QueueCapAtLeast, TumblingQueue};
 

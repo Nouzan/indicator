@@ -118,6 +118,18 @@ impl Period {
             }
         }
     }
+
+    /// Convert period to [`Duration`].
+    ///
+    /// Return `None` if period is a year or a month.
+    pub fn to_duration(&self) -> Option<Duration> {
+        match self.kind {
+            PeriodKind::Zero => Some(Duration::ZERO),
+            PeriodKind::Year | PeriodKind::Month => None,
+            PeriodKind::Day => Some(Duration::DAY),
+            PeriodKind::Duration(d) => Some(d),
+        }
+    }
 }
 
 const WEEK_OFFSET: Duration = Duration::days(4);

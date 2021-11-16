@@ -13,7 +13,12 @@ use crate::{Operator, OperatorExt, Tickable};
 pub use facet::{facet_map_t, FacetMap};
 pub use facet::{facet_t, Facet};
 pub use map::{map_t, Map};
-pub use tumbling::{queue::QueueCapAtLeast, TumblingOperation, TumblingOperator, TumblingQueue};
+pub use tumbling::{
+    cached, queue::QueueCapAtLeast, Cached, CachedOperation, TumblingOperation, TumblingOperator,
+    TumblingQueue,
+};
+#[cfg(feature = "std")]
+pub use tumbling::{shared, SharedMap};
 
 /// Ticked operator.
 pub trait TickedOperatorExt<I: Tickable>: Operator<I>

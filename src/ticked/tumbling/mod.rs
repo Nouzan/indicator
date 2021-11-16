@@ -1,8 +1,15 @@
 /// Queue.
 pub mod queue;
 
+/// Cached operation.
+pub mod cached;
+
 use crate::{Operator, TickValue, Tickable, TumblingWindow};
+pub use cached::{cached, Cached, CachedOperation};
 pub use queue::{QueueCapAtLeast, TumblingQueue};
+
+#[cfg(feature = "std")]
+pub use cached::shared_map::{shared, SharedMap};
 
 /// Tumbling operation.
 pub trait TumblingOperation<I, Q: QueueCapAtLeast<LEN>, const LEN: usize> {

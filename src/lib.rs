@@ -32,7 +32,7 @@
 //! use time::macros::offset;
 //! use arrayvec::ArrayVec;
 //!
-//! /// Return an indicator that calculate `hl2` and `ohlc4` simultaneously.
+//! /// Return an indicator that calculates `hl2` and `ohlc4` simultaneously.
 //! fn hl2_ohlc4(period: Period) -> impl Operator<TickValue<Decimal>, Output = (Decimal, Decimal)> {
 //!     tumbling(
 //!         period,

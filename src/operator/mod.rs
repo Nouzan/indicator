@@ -7,7 +7,11 @@ pub mod facet;
 /// Map operator.
 pub mod map;
 
+/// Identity operator.
+pub mod identity;
+
 pub use facet::{facet, Facet};
+pub use identity::{id, Identity};
 pub use map::{map, Map};
 use then::Then;
 
@@ -58,12 +62,3 @@ pub trait OperatorExt<I>: Operator<I> {
 }
 
 impl<I, T: Operator<I>> OperatorExt<I> for T {}
-
-/// Into operator.
-pub trait IntoOperator<I> {
-    /// The result operator.
-    type Operator: Operator<I>;
-
-    /// Convert into operator.
-    fn into_operator(self) -> Self::Operator;
-}

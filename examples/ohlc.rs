@@ -18,27 +18,27 @@ fn main() {
         (datetime!(2021-11-01 02:31:00 +0), dec!(193.7)),
         (datetime!(2021-11-01 02:53:59 +0), dec!(201.1)),
     ];
-    let op = tumbling(
-        Period::hours(offset!(+0), 1),
-        |_w: &ArrayVec<[Decimal; 4], 0>, y: &mut Option<[Decimal; 4]>, x| match y {
-            Some(ohlc) => {
-                ohlc[1] = ohlc[1].max(x);
-                ohlc[2] = ohlc[2].min(x);
-                ohlc[3] = x;
-                *ohlc
-            }
-            None => {
-                let ohlc = [x; 4];
-                *y = Some(ohlc);
-                ohlc
-            }
-        },
-    )
-    .then(facet_t(
-        map_t(|ohlc: [Decimal; 4]| (ohlc[1] + ohlc[2]) / dec!(2)),
-        map_t(|ohlc: [Decimal; 4]| (ohlc[0] + ohlc[1] + ohlc[2] + ohlc[3]) / dec!(4)),
-    ))
-    .map(|v| v.value);
+    let op = tumbling(Period::hours(offset!(+0), 1))
+        .w(
+            |_w: &ArrayVec<[Decimal; 4], 0>, y: &mut Option<[Decimal; 4]>, x| match y {
+                Some(ohlc) => {
+                    ohlc[1] = ohlc[1].max(x);
+                    ohlc[2] = ohlc[2].min(x);
+                    ohlc[3] = x;
+                    *ohlc
+                }
+                None => {
+                    let ohlc = [x; 4];
+                    *y = Some(ohlc);
+                    ohlc
+                }
+            },
+        )
+        .then(facet_t(
+            map_t(|ohlc: [Decimal; 4]| (ohlc[1] + ohlc[2]) / dec!(2)),
+            map_t(|ohlc: [Decimal; 4]| (ohlc[0] + ohlc[1] + ohlc[2] + ohlc[3]) / dec!(4)),
+        ))
+        .map(|v| v.value);
     for ohlc in data
         .into_iter()
         .map(|(ts, value)| TickValue::new(ts, value))

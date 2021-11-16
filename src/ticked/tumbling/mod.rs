@@ -1,10 +1,14 @@
 /// Queue.
 pub mod queue;
 
+/// Tumbling builder.
+pub mod chained;
+
 /// Pure tumbling operation.
 pub mod pure;
 
 use crate::{Operator, TickValue, Tickable, TumblingWindow};
+pub use chained::tumbling;
 pub use queue::{QueueCapAtLeast, TumblingQueue};
 
 /// Tumbling operation.
@@ -64,17 +68,18 @@ impl<
     }
 }
 
-/// Create a tumbling operator from a tumbling operation.
-pub fn tumbling<I, P, Q: QueueCapAtLeast<LEN>, M: TumblingWindow, const LEN: usize>(
-    mode: M,
-    op: P,
-) -> TumblingOperator<M, Q, P, LEN>
-where
-    P: TumblingOperation<I, Q, LEN>,
+impl<P, Q: QueueCapAtLeast<LEN>, M: TumblingWindow, const LEN: usize>
+    TumblingOperator<M, Q, P, LEN>
 {
-    TumblingOperator {
-        queue: TumblingQueue::new(mode),
-        acc: None,
-        op,
+    /// Create a new operator.
+    pub fn new<I>(mode: M, op: P) -> Self
+    where
+        P: TumblingOperation<I, Q, LEN>,
+    {
+        TumblingOperator {
+            queue: TumblingQueue::new(mode),
+            acc: None,
+            op,
+        }
     }
 }

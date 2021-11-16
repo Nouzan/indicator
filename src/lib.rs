@@ -45,7 +45,7 @@ pub mod iter;
 pub mod stream;
 
 pub use iter::IndicatorIteratorExt;
-pub use operator::{facet, map, IntoOperator, Operator, OperatorExt};
+pub use operator::{facet, id, map, Identity, Operator, OperatorExt};
 pub use ticked::{
     facet_t, map_t,
     tumbling::{tumbling, QueueCapAtLeast, TumblingOperation, TumblingOperator, TumblingQueue},

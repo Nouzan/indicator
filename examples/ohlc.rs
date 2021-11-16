@@ -18,8 +18,9 @@ fn main() {
         (datetime!(2021-11-01 02:31:00 +0), dec!(193.7)),
         (datetime!(2021-11-01 02:53:59 +0), dec!(201.1)),
     ];
+    let period = Period::hours(offset!(+0), 1);
     let op = tumbling(
-        Period::hours(offset!(+0), 1),
+        period,
         |_w: &ArrayVec<[Decimal; 4], 0>, y: &mut Option<[Decimal; 4]>, x| match y {
             Some(ohlc) => {
                 ohlc[1] = ohlc[1].max(x);

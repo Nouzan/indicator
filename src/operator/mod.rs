@@ -58,12 +58,3 @@ pub trait OperatorExt<I>: Operator<I> {
 }
 
 impl<I, T: Operator<I>> OperatorExt<I> for T {}
-
-/// Into operator.
-pub trait IntoOperator<I> {
-    /// The result operator.
-    type Operator: Operator<I>;
-
-    /// Convert into operator.
-    fn into_operator(self) -> Self::Operator;
-}

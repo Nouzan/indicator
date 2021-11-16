@@ -5,7 +5,7 @@ use super::Operator;
 pub struct Then<I, P1, P2>(
     pub(crate) P1,
     pub(crate) P2,
-    pub(crate) std::marker::PhantomData<fn() -> I>,
+    pub(crate) core::marker::PhantomData<fn() -> I>,
 );
 
 impl<I, P1, P2> Operator<I> for Then<I, P1, P2>

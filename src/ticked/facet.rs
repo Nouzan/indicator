@@ -8,12 +8,12 @@ pub use facet_map::{facet_map_t, FacetMap};
 pub struct Facet<I, P1, P2>(
     pub(super) P1,
     pub(super) P2,
-    pub(super) std::marker::PhantomData<fn() -> I>,
+    pub(super) core::marker::PhantomData<fn() -> I>,
 );
 
 /// Combine two ticked operators into a [`Facet`] ticked operator.
 pub fn facet_t<I, P1, P2>(op1: P1, op2: P2) -> Facet<I, P1, P2> {
-    Facet(op1, op2, std::marker::PhantomData::default())
+    Facet(op1, op2, core::marker::PhantomData::default())
 }
 
 impl<I: Tickable + Clone, P1, P2> Operator<I> for Facet<I, P1, P2>
@@ -46,7 +46,7 @@ mod facet_map {
 
     /// [`FacetMap`] combinator.
     #[derive(Debug, Clone)]
-    pub struct FacetMap<I, P>(HashMap<String, P>, std::marker::PhantomData<fn() -> I>);
+    pub struct FacetMap<I, P>(HashMap<String, P>, core::marker::PhantomData<fn() -> I>);
 
     impl<I, P> Operator<I> for FacetMap<I, P>
     where
@@ -78,7 +78,7 @@ mod facet_map {
     {
         FacetMap(
             ops.into_iter().collect(),
-            std::marker::PhantomData::default(),
+            core::marker::PhantomData::default(),
         )
     }
 }

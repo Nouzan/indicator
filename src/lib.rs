@@ -29,6 +29,7 @@
 //! ```
 //! use indicator::*;
 //! use rust_decimal::Decimal;
+//! use rust_decimal_macros::dec;
 //! use time::macros::offset;
 //! use arrayvec::ArrayVec;
 //!

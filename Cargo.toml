@@ -30,6 +30,7 @@ optional = true
 time = { version = "0.3", default-features = false, features = ["macros"] }
 rust_decimal = "1.17.0"
 rust_decimal_macros = "1.17.0"
+arrayvec = "0.7"
 
 [features]
 default = ["std", "stream", "arrayvec"]

@@ -24,6 +24,39 @@
 //!
 //! [Time series]: https://en.wikipedia.org/wiki/Time_series
 //! [Moving average]: https://en.wikipedia.org/wiki/Moving_average
+//!
+//! # Example
+//! ```
+//! use indicator::*;
+//! use rust_decimal::Decimal;
+//! use time::macros::offset;
+//! use arrayvec::ArrayVec;
+//!
+//! /// Return an indicator that calculate `hl2` and `ohlc4` simultaneously.
+//! fn hl2_ohlc4(period: Period) -> impl Operator<TickValue<Decimal>, Output = (Decimal, Decimal)> {
+//!     tumbling(
+//!         period,
+//!         |_w: &ArrayVec<[Decimal; 4], 0>, y: &mut Option<[Decimal; 4]>, x| match y {
+//!             Some(ohlc) => {
+//!                 ohlc[1] = ohlc[1].max(x);
+//!                 ohlc[2] = ohlc[2].min(x);
+//!                 ohlc[3] = x;
+//!                 *ohlc
+//!             }
+//!             None => {
+//!                 let ohlc = [x; 4];
+//!                 *y = Some(ohlc);
+//!                 ohlc
+//!             }
+//!         },
+//!     )
+//!     .then(facet_t(
+//!         map_t(|ohlc: [Decimal; 4]| (ohlc[1] + ohlc[2]) / dec!(2)),
+//!         map_t(|ohlc: [Decimal; 4]| (ohlc[0] + ohlc[1] + ohlc[2] + ohlc[3]) / dec!(4)),
+//!     ))
+//!     .map(|v| v.value)
+//! }
+//!```
 
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]

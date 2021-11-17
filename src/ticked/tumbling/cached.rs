@@ -18,6 +18,17 @@ pub trait CachedOperation<I, Q: QueueCapAtLeast<LEN, Item = I>, const LEN: usize
     }
 }
 
+impl<F, I, O, Q: QueueCapAtLeast<LEN, Item = I>, const LEN: usize> CachedOperation<I, Q, LEN> for F
+where
+    F: FnMut(&Q, bool, &I) -> O,
+{
+    type Output = O;
+
+    fn call(&mut self, q: &Q, new_period: bool, x: &I) -> O {
+        (self)(q, new_period, x)
+    }
+}
+
 /// A combinated cached operation of two cached operations sharing the same queue.
 #[derive(Debug, Clone, Copy)]
 pub struct Shared<I, P1, P2>(P1, P2, core::marker::PhantomData<fn() -> I>);

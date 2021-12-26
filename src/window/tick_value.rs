@@ -12,7 +12,16 @@ pub struct TickValue<T> {
 }
 
 impl<T> TickValue<T> {
-    /// Create a new [`TickValue`] from timestamp and value.
+    /// Create a new [`TickValue`] with the given `value`
+    /// and the `BIG_BANG` tick.
+    pub fn big_bang(value: T) -> Self {
+        Self {
+            tick: Tick::BIG_BANG,
+            value,
+        }
+    }
+
+    /// Create a new [`TickValue`] from `ts` and `value`.
     pub fn new(ts: OffsetDateTime, value: T) -> Self {
         Self {
             tick: Tick::new(ts),

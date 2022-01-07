@@ -1,6 +1,6 @@
 use super::Tick;
 use super::TumblingWindow;
-use std::hash::Hash;
+use core::hash::Hash;
 use time::{Duration, OffsetDateTime, UtcOffset};
 
 /// Period kind.

@@ -1,9 +1,10 @@
 use super::Tick;
 use super::TumblingWindow;
+use std::hash::Hash;
 use time::{Duration, OffsetDateTime, UtcOffset};
 
 /// Period kind.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum PeriodKind {
     /// Zero.
     Zero,
@@ -18,7 +19,7 @@ enum PeriodKind {
 }
 
 /// Period mode (A tumbling window).
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Period {
     offset: UtcOffset,
     kind: PeriodKind,

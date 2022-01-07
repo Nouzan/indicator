@@ -32,17 +32,19 @@ where
 mod facet_map {
     use super::Operator;
     use std::collections::HashMap;
+    use std::hash::Hash;
 
     /// [`FacetMap`] combinator.
     #[derive(Debug, Clone)]
-    pub struct FacetMap<I, P>(HashMap<String, P>, core::marker::PhantomData<fn() -> I>);
+    pub struct FacetMap<I, Q, P>(HashMap<Q, P>, core::marker::PhantomData<fn() -> I>);
 
-    impl<I, P> Operator<I> for FacetMap<I, P>
+    impl<I, Q, P> Operator<I> for FacetMap<I, Q, P>
     where
         I: Clone,
+        Q: Eq + Hash + Clone,
         P: Operator<I>,
     {
-        type Output = HashMap<String, P::Output>;
+        type Output = HashMap<Q, P::Output>;
 
         fn next(&mut self, input: I) -> Self::Output {
             self.0
@@ -57,9 +59,11 @@ mod facet_map {
 
     /// Create an operator that apply different operators to the same input,
     /// and return the collections of outputs as its output.
-    pub fn facet_map<I, It, P>(ops: It) -> FacetMap<I, P>
+    ///
+    pub fn facet_map<I, It, Q, P>(ops: It) -> FacetMap<I, Q, P>
     where
-        It: IntoIterator<Item = (String, P)>,
+        Q: Eq + Hash + Clone,
+        It: IntoIterator<Item = (Q, P)>,
     {
         FacetMap(
             ops.into_iter().collect(),

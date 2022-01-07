@@ -131,6 +131,11 @@ impl Period {
             PeriodKind::Duration(d) => Some(d),
         }
     }
+
+    /// Get the utc offset of this period.
+    pub fn utc_offset(&self) -> UtcOffset {
+        self.offset
+    }
 }
 
 const WEEK_OFFSET: Duration = Duration::days(4);

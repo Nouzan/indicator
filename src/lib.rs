@@ -93,6 +93,9 @@ pub use window::{Period, Tick, TickValue, Tickable, TumblingWindow};
 pub use ticked::facet_map_t;
 
 #[cfg(feature = "std")]
+pub use facet::facet_map;
+
+#[cfg(feature = "std")]
 pub use ticked::{shared, SharedMap};
 
 #[cfg(feature = "stream")]

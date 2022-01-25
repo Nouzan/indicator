@@ -4,8 +4,12 @@ pub mod queue;
 /// Cached operation.
 pub mod cached;
 
+/// Iterated operation.
+pub mod iterated;
+
 use crate::{Operator, TickValue, Tickable, TumblingWindow};
 pub use cached::{cached, Cached, CachedOperation};
+pub use iterated::{iterated, Iterated, IteratedOperation};
 pub use queue::{QueueCapAtLeast, TumblingQueue};
 
 #[cfg(feature = "std")]

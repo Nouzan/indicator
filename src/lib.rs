@@ -82,8 +82,8 @@ pub use operator::{facet, map, Operator, OperatorExt};
 pub use ticked::{
     facet_t, map_t,
     tumbling::{
-        cached, tumbling, Cached, CachedOperation, QueueCapAtLeast, TumblingOperation,
-        TumblingOperator, TumblingQueue,
+        cached, iterated, tumbling, Cached, CachedOperation, Iterated, IteratedOperation,
+        QueueCapAtLeast, TumblingOperation, TumblingOperator, TumblingQueue,
     },
     TickedOperatorExt,
 };

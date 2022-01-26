@@ -4,11 +4,20 @@ pub mod tumbling;
 /// [`Facet`] combinator of ticked operators.
 pub mod facet;
 
-/// [`Map`] operator of ticked operators.
+/// [`Map`] combinator of ticked operators.
 pub mod map;
+
+#[cfg(feature = "array-vec")]
+/// [`Array`] combinator of ticked operators.
+pub mod array;
+
+/// [`Tuple`] combinator of ticked operators.
+pub mod tuple;
 
 use crate::operator::then::Then;
 use crate::{Operator, OperatorExt, Tickable};
+#[cfg(feature = "array-vec")]
+pub use array::{array_t, Array};
 #[cfg(feature = "std")]
 pub use facet::{facet_map_t, FacetMap};
 pub use facet::{facet_t, Facet};
@@ -19,6 +28,7 @@ pub use tumbling::{
 };
 #[cfg(feature = "std")]
 pub use tumbling::{shared, SharedMap};
+pub use tuple::{tuple_t, Tuple};
 
 /// Ticked operator.
 pub trait TickedOperatorExt<I: Tickable>: Operator<I>

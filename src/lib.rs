@@ -85,7 +85,7 @@ pub use ticked::{
         cached, iterated, tumbling, Cached, CachedOperation, Iterated, IteratedOperation,
         QueueCapAtLeast, TumblingOperation, TumblingOperator, TumblingQueue,
     },
-    TickedOperatorExt,
+    tuple_t, TickedOperatorExt,
 };
 pub use window::{Period, Tick, TickValue, Tickable, TumblingWindow};
 
@@ -102,4 +102,4 @@ pub use ticked::{shared, SharedMap};
 pub use stream::IndicatorStreamExt;
 
 #[cfg(feature = "array-vec")]
-pub use ticked::{array_t, Array};
+pub use ticked::array_t;

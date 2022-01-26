@@ -11,6 +11,9 @@ pub mod map;
 /// [`Array`] combinator of ticked operators.
 pub mod array;
 
+/// [`Tuple`] combinator of ticked operators.
+pub mod tuple;
+
 use crate::operator::then::Then;
 use crate::{Operator, OperatorExt, Tickable};
 #[cfg(feature = "array-vec")]
@@ -25,6 +28,7 @@ pub use tumbling::{
 };
 #[cfg(feature = "std")]
 pub use tumbling::{shared, SharedMap};
+pub use tuple::{tuple_t, Tuple};
 
 /// Ticked operator.
 pub trait TickedOperatorExt<I: Tickable>: Operator<I>

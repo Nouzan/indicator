@@ -1,6 +1,7 @@
 use time::OffsetDateTime;
 
 /// A tick in time.
+#[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Tick(Option<OffsetDateTime>);
 

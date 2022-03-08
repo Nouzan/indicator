@@ -13,6 +13,8 @@ use then::Then;
 
 #[cfg(feature = "std")]
 pub use facet::{facet_map, FacetMap};
+extern crate alloc;
+use alloc::boxed::Box;
 
 /// Operator.
 pub trait Operator<I> {
@@ -55,6 +57,25 @@ pub trait OperatorExt<I>: Operator<I> {
     {
         self.then(map(f))
     }
+
+    /// Convert into a boxed operator.
+    fn boxed(self) -> Box<Self>
+    where
+        Self: Sized,
+    {
+        Box::new(self)
+    }
 }
 
 impl<I, T: Operator<I>> OperatorExt<I> for T {}
+
+impl<I, P> Operator<I> for Box<P>
+where
+    P: Operator<I>,
+{
+    type Output = P::Output;
+
+    fn next(&mut self, input: I) -> Self::Output {
+        self.as_mut().next(input)
+    }
+}

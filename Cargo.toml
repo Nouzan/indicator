@@ -1,6 +1,6 @@
 [package]
 name = "indicator"
-version = "0.1.10"
+version = "0.1.11"
 edition = "2021"
 authors = ["Nouzan"]
 license = "MIT"
@@ -26,6 +26,11 @@ default-features = false
 version = "0.2.7"
 optional = true
 
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+optional = true
+
 [dev-dependencies]
 time = { version = "0.3", default-features = false, features = ["macros"] }
 rust_decimal = "1.17.0"
@@ -37,3 +42,4 @@ default = ["std", "stream", "array-vec"]
 std = ["time/std", "futures/std"]
 array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
+serde-derive = ["serde", "time/serde-well-known"]

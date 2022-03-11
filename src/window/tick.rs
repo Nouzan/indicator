@@ -1,7 +1,15 @@
+#[cfg(feature = "serde-derive")]
+use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
+#[cfg(not(feature = "serde-derive"))]
 /// A tick in time.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Tick(Option<OffsetDateTime>);
+
+#[cfg(feature = "serde-derive")]
+/// A tick in time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tick(Option<OffsetDateTime>);
 
 impl Tick {

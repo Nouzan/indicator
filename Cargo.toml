@@ -1,6 +1,6 @@
 [package]
 name = "indicator"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2021"
 authors = ["Nouzan"]
 license = "MIT"
@@ -42,4 +42,4 @@ default = ["std", "stream", "array-vec"]
 std = ["time/std", "futures/std"]
 array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
-serde-derive = ["serde", "time/serde-well-known"]
+serde-derive = ["serde", "time/serde"]

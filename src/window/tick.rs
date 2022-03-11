@@ -1,3 +1,4 @@
+use core::cmp::{Ord, Ordering, PartialOrd};
 #[cfg(feature = "serde-derive")]
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
@@ -36,5 +37,22 @@ impl From<OffsetDateTime> for Tick {
 impl Default for Tick {
     fn default() -> Self {
         Self(None)
+    }
+}
+
+impl PartialOrd for Tick {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self.0.as_ref(), other.0.as_ref()) {
+            (Some(lhs), Some(rhs)) => Some(lhs.cmp(rhs)),
+            (Some(_), None) => Some(Ordering::Greater),
+            (None, Some(_)) => Some(Ordering::Less),
+            (None, None) => Some(Ordering::Equal),
+        }
+    }
+}
+
+impl Ord for Tick {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
     }
 }

@@ -59,9 +59,9 @@ pub trait OperatorExt<I>: Operator<I> {
     }
 
     /// Convert into a boxed operator.
-    fn boxed(self) -> Box<Self>
+    fn boxed<'a>(self) -> Box<dyn Operator<I, Output = Self::Output> + 'a>
     where
-        Self: Sized,
+        Self: Sized + 'a,
     {
         Box::new(self)
     }
@@ -71,7 +71,7 @@ impl<I, T: Operator<I>> OperatorExt<I> for T {}
 
 impl<I, P> Operator<I> for Box<P>
 where
-    P: Operator<I>,
+    P: Operator<I> + ?Sized,
 {
     type Output = P::Output;
 

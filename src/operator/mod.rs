@@ -16,6 +16,12 @@ pub use facet::{facet_map, FacetMap};
 extern crate alloc;
 use alloc::boxed::Box;
 
+/// Box Operator.
+pub type BoxOperator<'a, I, O> = Box<dyn Operator<I, Output = O> + Send + 'a>;
+
+/// Local Box Operator, [`BoxOperator`] without [`Send`].
+pub type LocalBoxOperator<'a, I, O> = Box<dyn Operator<I, Output = O> + 'a>;
+
 /// Operator.
 pub trait Operator<I> {
     /// Output type.
@@ -58,8 +64,16 @@ pub trait OperatorExt<I>: Operator<I> {
         self.then(map(f))
     }
 
-    /// Convert into a boxed operator.
-    fn boxed<'a>(self) -> Box<dyn Operator<I, Output = Self::Output> + 'a>
+    /// Convert into a [`BoxOperator`].
+    fn boxed<'a>(self) -> BoxOperator<'a, I, Self::Output>
+    where
+        Self: Sized + Send + 'a,
+    {
+        Box::new(self)
+    }
+
+    /// Convert into a [`LocalBoxOperator`].
+    fn boxed_local<'a>(self) -> LocalBoxOperator<'a, I, Self::Output>
     where
         Self: Sized + 'a,
     {

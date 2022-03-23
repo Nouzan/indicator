@@ -1,21 +1,111 @@
 use super::Tick;
 use super::TumblingWindow;
-use core::hash::Hash;
-use time::{Duration, OffsetDateTime, UtcOffset};
+use core::{cmp::Ordering, hash::Hash, time::Duration};
+use time::{OffsetDateTime, UtcOffset};
 
 /// Period kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Hash)]
 enum PeriodKind {
-    /// Zero.
-    Zero,
     /// A year.
     Year,
     /// A month.
     Month,
-    /// A day.
-    Day,
     /// Duration.
     Duration(Duration),
+}
+
+impl PartialEq for PeriodKind {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (PeriodKind::Year, PeriodKind::Year) => true,
+            (PeriodKind::Month, PeriodKind::Month) => true,
+            (PeriodKind::Duration(lhs), PeriodKind::Duration(rhs)) => lhs.eq(rhs),
+            _ => false,
+        }
+    }
+}
+
+const YEAD_SECS_LOWER: u64 = 31_536_000;
+const YEAD_SECS_UPPER: u64 = 31_622_400;
+const MONTH_SECS_LOWER: u64 = 2_419_200;
+const MONTH_SECS_UPPER: u64 = 2_678_400;
+const DAY_SECS: u64 = 86_400;
+const WEEK_SECS: u64 = 604_800;
+const HOUR_SECS: u64 = 3_600;
+const MINUTE_SECS: u64 = 60;
+
+impl Eq for PeriodKind {}
+
+impl PartialOrd for PeriodKind {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (PeriodKind::Year, PeriodKind::Year) => Some(Ordering::Equal),
+            (PeriodKind::Month, PeriodKind::Month) => Some(Ordering::Equal),
+            (PeriodKind::Duration(lhs), PeriodKind::Duration(rhs)) => lhs.partial_cmp(rhs),
+            (PeriodKind::Year, PeriodKind::Duration(d)) => {
+                if d.as_secs() < YEAD_SECS_LOWER {
+                    Some(Ordering::Greater)
+                } else if d.as_secs() > YEAD_SECS_UPPER {
+                    Some(Ordering::Less)
+                } else if d.as_secs() == YEAD_SECS_UPPER {
+                    if d.subsec_micros() > 0 {
+                        Some(Ordering::Less)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            (PeriodKind::Duration(d), PeriodKind::Year) => {
+                if d.as_secs() < YEAD_SECS_LOWER {
+                    Some(Ordering::Less)
+                } else if d.as_secs() > YEAD_SECS_UPPER {
+                    Some(Ordering::Greater)
+                } else if d.as_secs() == YEAD_SECS_UPPER {
+                    if d.subsec_micros() > 0 {
+                        Some(Ordering::Greater)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            (PeriodKind::Month, PeriodKind::Duration(d)) => {
+                if d.as_secs() < MONTH_SECS_LOWER {
+                    Some(Ordering::Greater)
+                } else if d.as_secs() > MONTH_SECS_UPPER {
+                    Some(Ordering::Less)
+                } else if d.as_secs() == MONTH_SECS_UPPER {
+                    if d.subsec_micros() > 0 {
+                        Some(Ordering::Less)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            (PeriodKind::Duration(d), PeriodKind::Month) => {
+                if d.as_secs() < MONTH_SECS_LOWER {
+                    Some(Ordering::Less)
+                } else if d.as_secs() > MONTH_SECS_UPPER {
+                    Some(Ordering::Greater)
+                } else if d.as_secs() == MONTH_SECS_UPPER {
+                    if d.subsec_micros() > 0 {
+                        Some(Ordering::Greater)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            (PeriodKind::Month, PeriodKind::Year) => Some(Ordering::Less),
+            (PeriodKind::Year, PeriodKind::Month) => Some(Ordering::Greater),
+        }
+    }
 }
 
 /// Period mode (A tumbling window).
@@ -25,6 +115,16 @@ pub struct Period {
     kind: PeriodKind,
 }
 
+impl PartialOrd for Period {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.offset.eq(&other.offset) {
+            self.kind.partial_cmp(&other.kind)
+        } else {
+            None
+        }
+    }
+}
+
 impl Period {
     /// Zero period.
     ///
@@ -32,7 +132,7 @@ impl Period {
     pub fn zero() -> Self {
         Self {
             offset: UtcOffset::UTC,
-            kind: PeriodKind::Zero,
+            kind: PeriodKind::Duration(Duration::ZERO),
         }
     }
 
@@ -56,7 +156,7 @@ impl Period {
     pub fn day(offset: UtcOffset) -> Self {
         Self {
             offset,
-            kind: PeriodKind::Day,
+            kind: PeriodKind::Duration(Duration::from_secs(DAY_SECS)),
         }
     }
 
@@ -67,7 +167,7 @@ impl Period {
         } else {
             Self {
                 offset,
-                kind: PeriodKind::Duration(Duration::weeks(weeks as i64)),
+                kind: PeriodKind::Duration(Duration::from_secs(weeks as u64 * WEEK_SECS)),
             }
         }
     }
@@ -79,7 +179,7 @@ impl Period {
             1 => Self::day(offset),
             days => Self {
                 offset,
-                kind: PeriodKind::Duration(Duration::days(days as i64)),
+                kind: PeriodKind::Duration(Duration::from_secs(days as u64 & DAY_SECS)),
             },
         }
     }
@@ -91,7 +191,7 @@ impl Period {
         } else {
             Self {
                 offset,
-                kind: PeriodKind::Duration(Duration::hours(hours as i64)),
+                kind: PeriodKind::Duration(Duration::from_secs(hours as u64 * HOUR_SECS)),
             }
         }
     }
@@ -103,19 +203,19 @@ impl Period {
         } else {
             Self {
                 offset,
-                kind: PeriodKind::Duration(Duration::minutes(minutes as i64)),
+                kind: PeriodKind::Duration(Duration::from_secs(minutes as u64 * MINUTE_SECS)),
             }
         }
     }
 
     /// Seconds
-    pub fn seconds(offset: UtcOffset, seconds: u32) -> Self {
+    pub fn seconds(offset: UtcOffset, seconds: u64) -> Self {
         if seconds == 0 {
             Self::zero()
         } else {
             Self {
                 offset,
-                kind: PeriodKind::Duration(Duration::seconds(seconds as i64)),
+                kind: PeriodKind::Duration(Duration::from_secs(seconds as u64)),
             }
         }
     }
@@ -123,12 +223,20 @@ impl Period {
     /// Convert period to [`Duration`].
     ///
     /// Return `None` if period is a year or a month.
-    pub fn to_duration(&self) -> Option<Duration> {
+    pub fn to_std_duration(&self) -> Option<Duration> {
         match self.kind {
-            PeriodKind::Zero => Some(Duration::ZERO),
             PeriodKind::Year | PeriodKind::Month => None,
-            PeriodKind::Day => Some(Duration::DAY),
             PeriodKind::Duration(d) => Some(d),
+        }
+    }
+
+    /// Convert period to [`time::Duration`].
+    ///
+    /// Return `None` if period is a year or a month.
+    pub fn to_duration(&self) -> Option<time::Duration> {
+        match self.kind {
+            PeriodKind::Year | PeriodKind::Month => None,
+            PeriodKind::Duration(d) => time::Duration::try_from(d).ok(),
         }
     }
 
@@ -138,7 +246,7 @@ impl Period {
     }
 }
 
-const WEEK_OFFSET: Duration = Duration::days(4);
+const WEEK_OFFSET: Duration = Duration::from_secs(4 * DAY_SECS);
 
 impl TumblingWindow for Period {
     fn same_window(&self, lhs: &Tick, rhs: &Tick) -> bool {
@@ -146,18 +254,16 @@ impl TumblingWindow for Period {
         let rhs = rhs.ts().map(|t| t.to_offset(self.offset));
         match (lhs, rhs) {
             (Some(lhs), Some(rhs)) => match self.kind {
-                PeriodKind::Zero => lhs == rhs,
                 PeriodKind::Year => lhs.year() == rhs.year(),
                 PeriodKind::Month => lhs.year() == rhs.year() && lhs.month() == rhs.month(),
-                PeriodKind::Day => lhs.date() == rhs.date(),
                 PeriodKind::Duration(d) => {
-                    let d = d.whole_seconds();
+                    let d = d.as_secs() as i128;
                     if d == 0 {
                         return lhs == rhs;
                     }
                     let base = OffsetDateTime::UNIX_EPOCH.replace_offset(self.offset) + WEEK_OFFSET;
-                    let lhs = (lhs - base).whole_seconds() / d;
-                    let rhs = (rhs - base).whole_seconds() / d;
+                    let lhs = (lhs - base).whole_seconds() as i128 / d;
+                    let rhs = (rhs - base).whole_seconds() as i128 / d;
                     lhs == rhs
                 }
             },

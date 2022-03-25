@@ -77,6 +77,10 @@ pub mod iter;
 /// Stream extension trait.
 pub mod stream;
 
+/// Rayon supported combinator.
+#[cfg(feature = "parallel")]
+pub mod rayon;
+
 pub use iter::IndicatorIteratorExt;
 pub use operator::{facet, map, Operator, OperatorExt};
 pub use ticked::{

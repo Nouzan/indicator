@@ -1,6 +1,6 @@
 use arrayvec::ArrayVec;
 use indicator::{
-    facet_t, map_t, rayon::facet_map, tumbling, IndicatorIteratorExt, Operator, OperatorExt,
+    map_t, rayon::facet_map, rayon::facet_t, tumbling, IndicatorIteratorExt, Operator, OperatorExt,
     Period, TickValue,
 };
 use rust_decimal::Decimal;

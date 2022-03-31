@@ -1,6 +1,6 @@
 use super::Tick;
 use super::TumblingWindow;
-use core::{cmp::Ordering, hash::Hash, time::Duration};
+use core::{cmp::Ordering, fmt, hash::Hash, time::Duration};
 use time::{OffsetDateTime, UtcOffset};
 
 /// Period kind.
@@ -272,6 +272,45 @@ impl TumblingWindow for Period {
     }
 }
 
+#[cfg(feature = "humantime")]
+use humantime::format_duration;
+
+impl fmt::Display for PeriodKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Year => {
+                write!(f, "y1")
+            }
+            Self::Month => {
+                write!(f, "mon1")
+            }
+            Self::Duration(d) => {
+                #[cfg(not(feature = "humantime"))]
+                {
+                    write!(f, "s{}", d.as_secs())
+                }
+                #[cfg(feature = "humantime")]
+                {
+                    write!(
+                        f,
+                        "{}",
+                        format_duration(*d)
+                            .to_string()
+                            .split_whitespace()
+                            .collect::<String>()
+                    )
+                }
+            }
+        }
+    }
+}
+
+impl fmt::Display for Period {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}({})", self.kind, self.offset.whole_hours())
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::{Period, TumblingWindow};
@@ -316,5 +355,11 @@ mod test {
         assert!(!mode.same_window(&lhs, &rhs));
         let rhs = datetime!(2021-10-31 23:59:59 +08).into();
         assert!(!mode.same_window(&lhs, &rhs));
+    }
+
+    #[test]
+    fn to_string() {
+        let mode = Period::hours(offset!(+8), 2);
+        println!("{}", mode);
     }
 }

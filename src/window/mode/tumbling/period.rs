@@ -26,7 +26,7 @@ impl PartialEq for PeriodKind {
 }
 
 impl Hash for PeriodKind {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         match self {
             Self::Year => {
                 state.write(&[0x00]);
@@ -376,6 +376,7 @@ mod test {
         assert!(!mode.same_window(&lhs, &rhs));
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn to_string() {
         let mode = Period::hours(offset!(+8), 2);

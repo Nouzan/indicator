@@ -4,7 +4,7 @@ use core::{cmp::Ordering, fmt, hash::Hash, time::Duration};
 use time::{OffsetDateTime, UtcOffset};
 
 /// Period kind.
-#[derive(Debug, Clone, Copy, Hash)]
+#[derive(Debug, Clone, Copy)]
 enum PeriodKind {
     /// A year.
     Year,
@@ -25,6 +25,27 @@ impl PartialEq for PeriodKind {
     }
 }
 
+impl Hash for PeriodKind {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            Self::Year => {
+                state.write(&[0x00]);
+                state.finish();
+            }
+            Self::Month => {
+                state.write(&[0x01]);
+                state.finish();
+            }
+            Self::Duration(d) => {
+                state.write(&[0x02]);
+                d.hash(state);
+            }
+        }
+    }
+}
+
+impl Eq for PeriodKind {}
+
 const YEAD_SECS_LOWER: u64 = 31_536_000;
 const YEAD_SECS_UPPER: u64 = 31_622_400;
 const MONTH_SECS_LOWER: u64 = 2_419_200;
@@ -33,8 +54,6 @@ const DAY_SECS: u64 = 86_400;
 const WEEK_SECS: u64 = 604_800;
 const HOUR_SECS: u64 = 3_600;
 const MINUTE_SECS: u64 = 60;
-
-impl Eq for PeriodKind {}
 
 impl PartialOrd for PeriodKind {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {

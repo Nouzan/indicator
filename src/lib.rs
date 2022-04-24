@@ -81,6 +81,10 @@ pub mod stream;
 #[cfg(feature = "parallel")]
 pub mod rayon;
 
+/// Async operator support.
+#[cfg(feature = "async")]
+pub mod async_operator;
+
 pub use iter::IndicatorIteratorExt;
 pub use operator::{facet, map, Operator, OperatorExt};
 pub use ticked::{
@@ -107,3 +111,9 @@ pub use stream::IndicatorStreamExt;
 
 #[cfg(feature = "array-vec")]
 pub use ticked::array_t;
+
+#[cfg(feature = "async")]
+pub use async_operator::AsyncOperator;
+
+#[cfg(feature = "tower")]
+pub use async_operator::ServiceOperator;

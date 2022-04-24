@@ -15,6 +15,11 @@ pub trait QueueCapAtLeast<const LEN: usize> {
     /// Get the nubmer of items in queue.
     fn len(&self) -> usize;
 
+    /// Is empty.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Deque an item.
     fn deque(&mut self) -> Option<Self::Item>;
 

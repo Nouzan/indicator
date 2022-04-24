@@ -10,7 +10,7 @@ pub struct Tick(Option<OffsetDateTime>);
 
 #[cfg(feature = "serde-derive")]
 /// A tick in time.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct Tick(Option<OffsetDateTime>);
 
 impl Tick {
@@ -31,12 +31,6 @@ impl Tick {
 impl From<OffsetDateTime> for Tick {
     fn from(value: OffsetDateTime) -> Self {
         Self::new(value)
-    }
-}
-
-impl Default for Tick {
-    fn default() -> Self {
-        Self(None)
     }
 }
 

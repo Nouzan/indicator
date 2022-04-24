@@ -13,7 +13,7 @@ impl<T, const LEN: usize> QueueCapAtLeast<LEN> for ArrayVec<T, LEN> {
     }
 
     fn deque(&mut self) -> Option<Self::Item> {
-        if self.len() > 0 {
+        if !self.is_empty() {
             Some(self.remove(self.len() - 1))
         } else {
             None

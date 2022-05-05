@@ -5,7 +5,7 @@ use time::{OffsetDateTime, UtcOffset};
 
 /// Period kind.
 #[derive(Debug, Clone, Copy)]
-enum PeriodKind {
+pub enum PeriodKind {
     /// A year.
     Year,
     /// A month.
@@ -262,6 +262,11 @@ impl Period {
     /// Get the utc offset of this period.
     pub fn utc_offset(&self) -> UtcOffset {
         self.offset
+    }
+
+    /// Get period kind.
+    pub fn kind(&self) -> PeriodKind {
+        self.kind
     }
 }
 

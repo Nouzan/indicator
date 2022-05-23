@@ -1,6 +1,6 @@
 [package]
 name = "indicator"
-version = "0.3.0-alpha.4"
+version = "0.3.0-alpha.5"
 edition = "2021"
 authors = ["Nouzan"]
 license = "MIT"
@@ -15,7 +15,7 @@ array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
 serde-derive = ["serde", "time/serde"]
 parallel = ["rayon", "std"]
-async = []
+async = ["futures", "pin-project-lite"]
 tower = ["std", "async", "tower-service"]
 
 [dependencies.arrayvec]

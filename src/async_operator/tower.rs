@@ -27,13 +27,13 @@ where
 
     type Error = S::Error;
 
-    type Future = S::Future;
+    type Future<'a> = S::Future where S: 'a;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.inner.poll_ready(cx)
     }
 
-    fn next(&mut self, input: I) -> Self::Future {
+    fn next(&mut self, input: I) -> Self::Future<'_> {
         self.inner.call(input)
     }
 }

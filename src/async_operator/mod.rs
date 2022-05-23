@@ -4,6 +4,9 @@ use core::future::Future;
 use core::task::{Context, Poll};
 use futures::future::{ready, Ready};
 
+// /// Then.
+// pub mod then;
+
 /// Async Operator.
 /// It can be seen as an alias of [`tower_service::Service`].
 pub trait AsyncOperator<I> {
@@ -14,13 +17,15 @@ pub trait AsyncOperator<I> {
     type Error;
 
     /// The future output value.
-    type Future: Future<Output = Result<Self::Output, Self::Error>>;
+    type Future<'a>: Future<Output = Result<Self::Output, Self::Error>>
+    where
+        Self: 'a;
 
     /// Check if the operator is ready to process the next input.
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;
 
     /// Process the next input.
-    fn next(&mut self, input: I) -> Self::Future;
+    fn next(&mut self, input: I) -> Self::Future<'_>;
 }
 
 /// Next operator that converts a blocking [`Operator`] into an [`AsyncOperator`].
@@ -37,13 +42,13 @@ where
 
     type Error = Infallible;
 
-    type Future = Ready<Result<Self::Output, Self::Error>>;
+    type Future<'a> = Ready<Result<Self::Output, Self::Error>> where P: 'a;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
 
-    fn next(&mut self, input: I) -> Self::Future {
+    fn next(&mut self, input: I) -> Self::Future<'_> {
         ready(Ok(Operator::next(&mut self.inner, input)))
     }
 }

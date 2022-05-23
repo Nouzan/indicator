@@ -60,6 +60,7 @@
 
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(feature = "async", feature(generic_associated_types))]
 
 /// Operator.
 pub mod operator;

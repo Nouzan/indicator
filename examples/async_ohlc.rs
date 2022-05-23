@@ -55,7 +55,8 @@ async fn main() -> anyhow::Result<()> {
     )
     .async_indicator(
         op.into_async_operator()
-            .and_then(map(|(hl2, ohlc4): (Decimal, Decimal)| hl2.max(ohlc4)).into_async_operator()),
+            .and_then(map(|(hl2, ohlc4): (Decimal, Decimal)| hl2.max(ohlc4)).into_async_operator())
+            .map_err(|_err| anyhow::anyhow!("infallible")),
     );
 
     while let Some(d) = stream.next().await {

@@ -13,9 +13,14 @@ pub mod next;
 /// And then.
 pub mod and_then;
 
+/// Map error.
+pub mod map_err;
+
 pub use next::{next, Next};
 #[cfg(feature = "tower")]
 pub use tower::{ServiceOp, ServiceOperator};
+
+use self::map_err::MapErr;
 
 /// Async Operator.
 /// It can be seen as an alias of [`tower_service::Service`].
@@ -47,6 +52,15 @@ pub trait AsyncOperatorExt<I>: AsyncOperator<I> {
         P2: AsyncOperator<Self::Output>,
     {
         Then(self, other, PhantomData)
+    }
+
+    /// Convert error.
+    fn map_err<E, F>(self, f: F) -> MapErr<F, Self>
+    where
+        Self: Sized,
+        F: FnMut(Self::Error) -> E,
+    {
+        MapErr { inner: self, f }
     }
 }
 

@@ -20,7 +20,10 @@ where
 {
     type Item = P::Output;
 
-    fn poll_next(self: core::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+    fn poll_next(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
         let res = ready!(this.source.as_mut().poll_next(cx));
         Poll::Ready(res.map(|x| this.op.next(x)))

@@ -60,21 +60,21 @@ jobs:
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: clippy
-              args: --all --all-targets --features array-vec,stream,serde-derive,parallel,tower
+              args: --all --all-targets --features array-vec,stream,serde-derive,parallel
 
           - name: Build
             uses: actions-rs/cargo@v1
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: build
-              args: --features array-vec,stream,serde-derive,parallel,tower
+              args: --features array-vec,stream,serde-derive,parallel
 
           - name: Test
             uses: actions-rs/cargo@v1
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: test
-              args: --features array-vec,stream,serde-derive,parallel,tower
+              args: --features array-vec,stream,serde-derive,parallel
 
           - name: Test for no-std
             uses: actions-rs/cargo@v1

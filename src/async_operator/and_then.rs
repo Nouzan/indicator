@@ -7,14 +7,14 @@ use pin_project_lite::pin_project;
 
 pin_project! {
     /// Future for [`Then`].
-    pub struct ThenFuture<'a, Fut, P>{
+    pub struct AndThenFuture<'a, Fut, P>{
         #[pin]
         input_fut: Fut,
         output_op: &'a mut P,
     }
 }
 
-impl<'a, T, E, Fut, P> Future for ThenFuture<'a, Fut, P>
+impl<'a, T, E, Fut, P> Future for AndThenFuture<'a, Fut, P>
 where
     Fut: Future<Output = Result<T, E>>,
     P: AsyncOperator<T, Error = E>,
@@ -41,7 +41,7 @@ where
 {
     type Output = P2::Output;
     type Error = E;
-    type Future<'a> = ThenFuture<'a, P1::Future<'a>, P2> where I: 'a, P1: 'a, P2: 'a;
+    type Future<'a> = AndThenFuture<'a, P1::Future<'a>, P2> where I: 'a, P1: 'a, P2: 'a;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         match ready!(self.0.poll_ready(cx)) {
@@ -52,7 +52,7 @@ where
 
     fn next(&mut self, input: I) -> Self::Future<'_> {
         let input_fut = self.0.next(input);
-        ThenFuture {
+        AndThenFuture {
             input_fut,
             output_op: &mut self.1,
         }

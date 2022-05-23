@@ -7,11 +7,11 @@ use core::task::{Context, Poll};
 /// [tower_service::Service] as [`AsyncOperator`].
 pub mod tower;
 
-/// Then.
-pub mod then;
-
 /// Next operator, the container of "sync" operators.
 pub mod next;
+
+/// And then.
+pub mod and_then;
 
 pub use next::{next, Next};
 #[cfg(feature = "tower")]
@@ -40,8 +40,8 @@ pub trait AsyncOperator<I> {
 
 /// Extention trait for async operators.
 pub trait AsyncOperatorExt<I>: AsyncOperator<I> {
-    /// Then.
-    fn then<P2>(self, other: P2) -> Then<I, Self, P2>
+    /// And then.
+    fn and_then<P2>(self, other: P2) -> Then<I, Self, P2>
     where
         Self: Sized,
         P2: AsyncOperator<Self::Output>,

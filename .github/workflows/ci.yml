@@ -18,8 +18,8 @@ on:
       - v*
 
 jobs:
-    rust-test:
-        name: Test on Rust ${{ matrix.rust }}
+    no-gat:
+        name: Test on Rust ${{ matrix.rust }} (No GAT)
         runs-on: ubuntu-latest
         if: "!contains(github.event.head_commit.message, 'skip ci')"
 
@@ -30,6 +30,68 @@ jobs:
               - beta
               - nightly
               - 1.56.1 # MSRV
+
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v2
+          - name: Cancel Previous Runs
+            uses: styfle/cancel-workflow-action@0.6.0
+            with:
+              access_token: ${{ github.token }}
+
+          - name: Install Rust Toolchain
+            uses: actions-rs/toolchain@v1
+            if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
+            with:
+              profile: minimal
+              toolchain: ${{ matrix.rust }}
+              override: true
+              components: rustfmt, clippy
+
+          - name: Check Format
+            uses: actions-rs/cargo@v1
+            if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
+            with:
+              command: fmt
+              args: --all -- --check
+
+          - name: Lint
+            uses: actions-rs/cargo@v1
+            if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
+            with:
+              command: clippy
+              args: --all --all-targets --features array-vec,stream,serde-derive,parallel,tower
+
+          - name: Build
+            uses: actions-rs/cargo@v1
+            if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
+            with:
+              command: build
+              args: --features array-vec,stream,serde-derive,parallel,tower
+
+          - name: Test
+            uses: actions-rs/cargo@v1
+            if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
+            with:
+              command: test
+              args: --features array-vec,stream,serde-derive,parallel,tower
+
+          - name: Test for no-std
+            uses: actions-rs/cargo@v1
+            if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
+            with:
+              command: test
+              args: --lib --features array-vec,stream,serde-derive --no-default-features
+
+    gat:
+        name: Test on Rust ${{ matrix.rust }} (with GAT enable)
+        runs-on: ubuntu-latest
+        if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+        strategy:
+          matrix:
+            rust:
+              - nightly
 
         steps:
           - name: Checkout
@@ -81,4 +143,4 @@ jobs:
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: test
-              args: --lib --features array-vec --no-default-features
+              args: --lib --features array-vec,stream,serde-derive,async --no-default-features

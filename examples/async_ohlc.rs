@@ -1,7 +1,8 @@
 use arrayvec::ArrayVec;
 use futures::{stream::iter, StreamExt};
 use indicator::{
-    facet_t, map_t, tumbling, IndicatorStreamExt, Operator, OperatorExt, Period, TickValue,
+    async_operator::AsyncOperatorExt, facet_t, map, map_t, tumbling, IndicatorStreamExt, Operator,
+    OperatorExt, Period, TickValue,
 };
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -52,11 +53,14 @@ async fn main() -> anyhow::Result<()> {
         data.into_iter()
             .map(|(ts, value)| TickValue::new(ts, value)),
     )
-    .async_indicator(op.into_async_operator());
+    .async_indicator(
+        op.into_async_operator()
+            .then(map(|(hl2, ohlc4): (Decimal, Decimal)| hl2.max(ohlc4)).into_async_operator()),
+    );
 
     while let Some(d) = stream.next().await {
         let d = d?;
-        println!("{d:?}");
+        println!("{d}");
     }
 
     Ok(())

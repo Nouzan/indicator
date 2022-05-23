@@ -1,10 +1,8 @@
 use crate::{operator::then::Then, AsyncOperator};
-use core::marker::PhantomData;
 use core::future::Future;
-use core::task::{Poll, Context};
 use core::pin::Pin;
-use futures::future::{BoxFuture, MapOk, AndThen};
-use futures::{ready, TryFutureExt, pin_mut};
+use core::task::{Context, Poll};
+use futures::{pin_mut, ready};
 use pin_project_lite::pin_project;
 
 pin_project! {
@@ -30,10 +28,8 @@ where
                 let fut = this.output_op.next(input);
                 pin_mut!(fut);
                 fut.poll(cx)
-            },
-            Err(err) => {
-                Poll::Ready(Err(err))
             }
+            Err(err) => Poll::Ready(Err(err)),
         }
     }
 }
@@ -45,7 +41,7 @@ where
 {
     type Output = P2::Output;
     type Error = E;
-    type Future = AndThen<P1::Future, P2::Future, fn(P1::Output) -> P2::Future>;
+    type Future<'a> = ThenFuture<'a, P1::Future<'a>, P2> where I: 'a, P1: 'a, P2: 'a;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         match ready!(self.0.poll_ready(cx)) {
@@ -54,10 +50,11 @@ where
         }
     }
 
-    fn next(&mut self, input: I) -> Self::Future {
-        self
-            .0
-            .next(input)
-            .and_then(self.1.next)
+    fn next(&mut self, input: I) -> Self::Future<'_> {
+        let input_fut = self.0.next(input);
+        ThenFuture {
+            input_fut,
+            output_op: &mut self.1,
+        }
     }
 }

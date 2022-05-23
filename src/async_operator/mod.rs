@@ -1,11 +1,21 @@
-use super::Operator;
-use core::convert::Infallible;
+use crate::operator::then::Then;
 use core::future::Future;
+use core::marker::PhantomData;
 use core::task::{Context, Poll};
-use futures::future::{ready, Ready};
 
-// /// Then.
-// pub mod then;
+#[cfg(feature = "tower")]
+/// [tower_service::Service] as [`AsyncOperator`].
+pub mod tower;
+
+/// Then.
+pub mod then;
+
+/// Next operator, the container of "sync" operators.
+pub mod next;
+
+pub use next::{next, Next};
+#[cfg(feature = "tower")]
+pub use tower::{ServiceOp, ServiceOperator};
 
 /// Async Operator.
 /// It can be seen as an alias of [`tower_service::Service`].
@@ -28,34 +38,16 @@ pub trait AsyncOperator<I> {
     fn next(&mut self, input: I) -> Self::Future<'_>;
 }
 
-/// Next operator that converts a blocking [`Operator`] into an [`AsyncOperator`].
-#[derive(Debug, Clone, Copy)]
-pub struct Next<P> {
-    pub(crate) inner: P,
-}
-
-impl<P, I, O> AsyncOperator<I> for Next<P>
-where
-    P: Operator<I, Output = O>,
-{
-    type Output = O;
-
-    type Error = Infallible;
-
-    type Future<'a> = Ready<Result<Self::Output, Self::Error>> where P: 'a;
-
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn next(&mut self, input: I) -> Self::Future<'_> {
-        ready(Ok(Operator::next(&mut self.inner, input)))
+/// Extention trait for async operators.
+pub trait AsyncOperatorExt<I>: AsyncOperator<I> {
+    /// Then.
+    fn then<P2>(self, other: P2) -> Then<I, Self, P2>
+    where
+        Self: Sized,
+        P2: AsyncOperator<Self::Output>,
+    {
+        Then(self, other, PhantomData)
     }
 }
 
-#[cfg(feature = "tower")]
-pub use tower::{ServiceOp, ServiceOperator};
-
-#[cfg(feature = "tower")]
-/// [tower_service::Service] as [`AsyncOperator`].
-pub mod tower;
+impl<I, P> AsyncOperatorExt<I> for P where P: AsyncOperator<I> {}

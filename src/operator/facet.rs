@@ -6,9 +6,9 @@ pub use facet_map::{facet_map, FacetMap};
 /// [`Facet`] combinator.
 #[derive(Debug, Clone, Copy)]
 pub struct Facet<I, P1, P2>(
-    pub(super) P1,
-    pub(super) P2,
-    pub(super) core::marker::PhantomData<fn() -> I>,
+    pub(crate) P1,
+    pub(crate) P2,
+    pub(crate) core::marker::PhantomData<fn() -> I>,
 );
 
 /// Combine two operators into a [`Facet`] operator.
@@ -36,7 +36,10 @@ mod facet_map {
 
     /// [`FacetMap`] combinator.
     #[derive(Debug, Clone)]
-    pub struct FacetMap<I, Q, P>(HashMap<Q, P>, core::marker::PhantomData<fn() -> I>);
+    pub struct FacetMap<I, Q, P>(
+        pub(crate) HashMap<Q, P>,
+        core::marker::PhantomData<fn() -> I>,
+    );
 
     impl<I, Q, P> Operator<I> for FacetMap<I, Q, P>
     where

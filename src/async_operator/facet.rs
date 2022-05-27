@@ -72,6 +72,9 @@ where
     }
 
     fn next(&mut self, input: I) -> Self::Future<'_> {
-        self.0.iter_mut().map(|(k,v)| (k.clone(),v.next(input.clone()))).collect()
+        self.0
+            .iter_mut()
+            .map(|(k, v)| (k.clone(), v.next(input.clone())))
+            .collect()
     }
 }

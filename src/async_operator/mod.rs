@@ -16,6 +16,12 @@ pub mod and_then;
 /// Map error.
 pub mod map_err;
 
+/// Map
+pub mod map;
+
+/// Facet
+pub mod facet;
+
 pub use next::{next, Next};
 #[cfg(feature = "tower")]
 pub use tower::{ServiceOp, ServiceOperator};

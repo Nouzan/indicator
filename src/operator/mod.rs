@@ -16,6 +16,9 @@ pub use facet::{facet_map, FacetMap};
 extern crate alloc;
 use alloc::boxed::Box;
 
+#[cfg(feature = "async")]
+use crate::async_operator::Next;
+
 /// Box Operator.
 pub type BoxOperator<'a, I, O> = Box<dyn Operator<I, Output = O> + Send + 'a>;
 
@@ -78,6 +81,15 @@ pub trait OperatorExt<I>: Operator<I> {
         Self: Sized + 'a,
     {
         Box::new(self)
+    }
+
+    #[cfg(feature = "async")]
+    /// Convert into a [`AsyncOperator`].
+    fn into_async_operator(self) -> Next<Self>
+    where
+        Self: Sized,
+    {
+        Next { inner: self }
     }
 }
 

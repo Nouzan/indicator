@@ -60,6 +60,7 @@
 
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(feature = "async", feature(generic_associated_types))]
 
 /// Operator.
 pub mod operator;
@@ -80,6 +81,10 @@ pub mod stream;
 /// Rayon supported combinator.
 #[cfg(feature = "parallel")]
 pub mod rayon;
+
+/// Async operator support.
+#[cfg(feature = "async")]
+pub mod async_operator;
 
 pub use iter::IndicatorIteratorExt;
 pub use operator::{facet, map, Operator, OperatorExt};
@@ -107,3 +112,9 @@ pub use stream::IndicatorStreamExt;
 
 #[cfg(feature = "array-vec")]
 pub use ticked::array_t;
+
+#[cfg(feature = "async")]
+pub use async_operator::AsyncOperator;
+
+#[cfg(feature = "tower")]
+pub use async_operator::ServiceOperator;

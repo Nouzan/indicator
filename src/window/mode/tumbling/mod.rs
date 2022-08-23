@@ -5,7 +5,7 @@ pub mod period;
 pub mod new;
 
 use super::super::Tick;
-pub use period::Period;
+pub use period::{Period, PeriodKind};
 
 /// Tumbling window mode.
 pub trait TumblingWindow: Clone {

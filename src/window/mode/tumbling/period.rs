@@ -130,8 +130,10 @@ impl PartialOrd for PeriodKind {
 /// Period mode (A tumbling window).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Period {
-    offset: UtcOffset,
-    kind: PeriodKind,
+    /// UTC offset.
+    pub offset: UtcOffset,
+    /// Period kind.
+    pub kind: PeriodKind,
 }
 
 impl PartialOrd for Period {
@@ -267,6 +269,22 @@ impl Period {
     /// Get period kind.
     pub fn kind(&self) -> PeriodKind {
         self.kind
+    }
+
+    /// Change the utc offset.
+    /// # Example
+    /// ```
+    /// use indicator::Period;
+    /// use time::macros::offset;
+    ///
+    /// let period = Period::day(offset!(+0));
+    /// assert_eq!(period.to_offset(offset!(+8)), Period::day(offset!(+8)));
+    /// ```
+    pub fn to_offset(&self, offset: UtcOffset) -> Self {
+        Self {
+            offset,
+            kind: self.kind,
+        }
     }
 }
 

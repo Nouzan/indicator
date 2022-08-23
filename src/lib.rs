@@ -96,7 +96,7 @@ pub use ticked::{
     },
     tuple_t, TickedOperatorExt,
 };
-pub use window::{Period, Tick, TickValue, Tickable, TumblingWindow};
+pub use window::{Period, PeriodKind, Tick, TickValue, Tickable, TumblingWindow};
 
 #[cfg(feature = "std")]
 pub use ticked::facet_map_t;

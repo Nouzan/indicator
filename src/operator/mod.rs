@@ -36,7 +36,7 @@ pub trait Operator<I> {
 
 impl<'a, I, P> Operator<I> for &'a mut P
 where
-    P: Operator<I>,
+    P: Operator<I> + ?Sized,
 {
     type Output = P::Output;
 

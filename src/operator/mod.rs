@@ -34,6 +34,17 @@ pub trait Operator<I> {
     fn next(&mut self, input: I) -> Self::Output;
 }
 
+impl<'a, I, P> Operator<I> for &'a mut P
+where
+    P: Operator<I>,
+{
+    type Output = P::Output;
+
+    fn next(&mut self, input: I) -> Self::Output {
+        (*self).next(input)
+    }
+}
+
 /// Operator extension trait.
 pub trait OperatorExt<I>: Operator<I> {
     /// Combine with another operator that uses `Self::Output` as input type.

@@ -1,13 +1,4 @@
-trait Operator<I> {
-    type Output<'out>
-    where
-        Self: 'out,
-        I: 'out;
-
-    fn next<'out>(&'out mut self, input: I) -> Self::Output<'out>
-    where
-        I: 'out;
-}
+use indicator::gat::*;
 
 #[derive(Default)]
 struct Collect {
@@ -45,29 +36,8 @@ impl<'a> Operator<&'a [usize]> for Mux {
     }
 }
 
-pub struct Then<P1, P2>(P1, P2);
-
-impl<I, P1, P2> Operator<I> for Then<P1, P2>
-where
-    P1: Operator<I>,
-    P2: for<'out> Operator<P1::Output<'out>>,
-{
-    type Output<'out> = <P2 as Operator<<P1 as Operator<I>>::Output<'out>>>::Output<'out>
-    where
-        I: 'out,
-        P1: 'out,
-        P2: 'out;
-
-    fn next<'out>(&'out mut self, input: I) -> Self::Output<'out>
-    where
-        I: 'out,
-    {
-        self.1.next(self.0.next(input))
-    }
-}
-
 fn main() {
-    let mut op = Then(Collect::default(), Mux);
+    let mut op = Collect::default().then(Mux);
     for x in [1, 2, 3, 4, 5] {
         println!("{:?}", op.next(x));
     }

@@ -27,6 +27,23 @@ pub trait Operator<I> {
         I: 'out;
 }
 
+impl<'a, I, P> Operator<I> for &'a mut P
+where
+    P: Operator<I>,
+{
+    type Output<'out> = P::Output<'out>
+    where
+        Self: 'out,
+        I: 'out;
+
+    fn next<'out>(&'out mut self, input: I) -> Self::Output<'out>
+    where
+        I: 'out,
+    {
+        (*self).next(input)
+    }
+}
+
 /// Helpers for [`Operator`].
 pub trait OperatorExt<I>: Operator<I> {
     /// Combine two operators.

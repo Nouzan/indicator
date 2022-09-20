@@ -19,6 +19,8 @@ parallel = ["rayon", "std"]
 async = ["futures", "pin-project-lite"]
 tower = ["std", "async", "tower-service"]
 
+gat = []
+
 [dependencies.arrayvec]
 version = "0.7"
 optional = true

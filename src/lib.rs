@@ -85,6 +85,10 @@ pub mod rayon;
 #[cfg(feature = "async")]
 pub mod async_operator;
 
+/// Operator using GAT.
+#[cfg(feature = "gat")]
+pub mod gat;
+
 pub use iter::IndicatorIteratorExt;
 pub use operator::{facet, map, Operator, OperatorExt};
 pub use ticked::{

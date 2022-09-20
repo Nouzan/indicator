@@ -1,10 +1,13 @@
-use self::{map::Map, then::Then};
+use self::{map::Map, mux::Mux, then::Then};
 
 /// Combine two operators.
 pub mod then;
 
 /// Convert the input directly.
 pub mod map;
+
+/// Use two operators simultaneously.
+pub mod mux;
 
 /// Identity operator.
 pub mod identity;
@@ -53,9 +56,26 @@ pub trait OperatorExt<I>: Operator<I> {
     fn map<O, F>(self, f: F) -> Then<Self, Map<F>>
     where
         Self: Sized,
-        F: FnMut(I) -> O,
+        F: FnMut(Self::Output<'_>) -> O,
     {
         Then(self, Map(f))
+    }
+
+    /// Use with the other operator simultaneously.
+    /// ```
+    /// use indicator::gat::*;
+    ///
+    /// fn plus_mul() -> impl for<'out> Operator<usize, Output<'out> = usize> {
+    ///     map(|x| x + 1).mux_with(map(|x| x * 2)).map(|(x, y)| x + y)
+    /// }
+    /// ```
+    fn mux_with<P>(self, other: P) -> Mux<Self, P>
+    where
+        I: Clone,
+        Self: Sized,
+        P: Operator<I>,
+    {
+        Mux(self, other)
     }
 }
 

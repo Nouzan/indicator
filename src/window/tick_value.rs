@@ -28,6 +28,17 @@ impl<T> TickValue<T> {
             value,
         }
     }
+
+    /// Map over the tick value.
+    pub fn map<U, F>(self, f: F) -> TickValue<U>
+    where
+        F: FnOnce(T) -> U,
+    {
+        TickValue {
+            tick: self.tick,
+            value: (f)(self.value),
+        }
+    }
 }
 
 impl<T> Tickable for TickValue<T> {

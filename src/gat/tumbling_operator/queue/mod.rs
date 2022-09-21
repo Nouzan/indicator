@@ -1,3 +1,6 @@
+/// Circular Queue.
+pub mod circular;
+
 /// Queue.
 pub trait Queue {
     /// Item.

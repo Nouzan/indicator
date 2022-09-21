@@ -1,10 +1,13 @@
 use crate::{TickValue, Tickable};
 
-use super::GatOperator;
+use super::{
+    super::operator::map::{map, Map},
+    GatOperator,
+};
 
 /// Operator returns by [`map_t`].
 #[derive(Debug, Clone, Copy)]
-pub struct TickMap<F>(pub(super) F);
+pub struct MapTick<P>(pub(super) P);
 
 /// Convert the value of inside the tickabe input directly.
 /// ```
@@ -14,25 +17,25 @@ pub struct TickMap<F>(pub(super) F);
 ///     map_t(|x| x + 1)
 /// }
 /// ```
-pub fn map_t<I, O, F>(f: F) -> TickMap<F>
+pub fn map_t<I, O, F>(f: F) -> MapTick<Map<F>>
 where
     F: FnMut(I) -> O,
 {
-    TickMap(f)
+    MapTick(map(f))
 }
 
-impl<I, O, F> GatOperator<I> for TickMap<F>
+impl<I, P> GatOperator<I> for MapTick<P>
 where
     I: Tickable,
-    F: FnMut(I::Value) -> O,
+    P: GatOperator<I::Value>,
 {
-    type Output<'out> = TickValue<O> where F: 'out, I: 'out;
+    type Output<'out> = TickValue<P::Output<'out>> where P: 'out, I: 'out;
 
     #[inline]
     fn next<'out>(&'out mut self, input: I) -> Self::Output<'out>
     where
         I: 'out,
     {
-        input.into_tick_value().map(&mut self.0)
+        input.into_tick_value().map(|v| self.0.next(v))
     }
 }

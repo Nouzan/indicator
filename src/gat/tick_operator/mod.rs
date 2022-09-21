@@ -1,11 +1,11 @@
 use crate::Tickable;
 
-use self::tick_map::TickMap;
+use self::map_tick::MapTick;
 
-use super::{map_t, operator::then::Then, GatOperator};
+use super::{operator::then::Then, GatOperator};
 
 /// Map over the ticked value.
-pub mod tick_map;
+pub mod map_tick;
 
 /// Helpers for the operaors with [`Tickable`] output.
 pub trait TickGatOperatorExt<I>: GatOperator<I>
@@ -17,15 +17,15 @@ where
     /// use indicator::{gat::*, TickValue};
     ///
     /// fn plus_one() -> impl for<'out> GatOperator<TickValue<usize>, Output<'out> = TickValue<usize>> {
-    ///     id().map_t(|x| x + 1)
+    ///     id().map_tick(map(|x| x + 1))
     /// }
     /// ```
-    fn map_t<U, F>(self, f: F) -> Then<Self, TickMap<F>>
+    fn map_tick<P>(self, op: P) -> Then<Self, MapTick<P>>
     where
         Self: Sized,
-        F: FnMut(<Self::Output<'_> as Tickable>::Value) -> U,
+        P: for<'out> GatOperator<<Self::Output<'out> as Tickable>::Value>,
     {
-        Then(self, map_t(f))
+        Then(self, MapTick(op))
     }
 }
 

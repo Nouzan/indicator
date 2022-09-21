@@ -5,4 +5,4 @@ pub mod operator;
 pub mod tick_operator;
 
 pub use operator::{identity::id, map::map, mux::mux, GatOperator, GatOperatorExt};
-pub use tick_operator::{tick_map::map_t, TickGatOperatorExt};
+pub use tick_operator::{map_tick::map_t, TickGatOperatorExt};

@@ -1,3 +1,5 @@
+use core::ops::Deref;
+
 /// Circular Queue.
 pub mod circular;
 
@@ -51,38 +53,6 @@ impl<T> TumblingQueue<T>
 where
     T: Queue,
 {
-    /// Latest.
-    #[inline]
-    pub fn latest(&self) -> &T::Item {
-        // According to the dynmaic tumbling algorithm,
-        // it must contain at least one item.
-        self.0.get(0).unwrap()
-    }
-
-    /// Get the latest `n` item.
-    #[inline]
-    pub fn get(&self, idx: usize) -> Option<&T::Item> {
-        self.0.get(idx)
-    }
-
-    /// Return whether the elements are on the stack.
-    #[inline]
-    pub fn is_inline(&self) -> bool {
-        self.0.is_inline()
-    }
-
-    /// Get current length.
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    /// Is empty.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
     /// Enque an item and deque the oldest item if overflow.
     pub fn enque_and_deque_overflow(&mut self, item: T::Item) -> Option<T::Item> {
         if self.0.is_full() {
@@ -93,5 +63,16 @@ where
             self.0.enque(item);
             None
         }
+    }
+}
+
+impl<T> Deref for TumblingQueue<T>
+where
+    T: Queue,
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

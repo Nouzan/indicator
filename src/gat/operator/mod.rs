@@ -94,6 +94,33 @@ pub trait OperatorExt<I>: Operator<I> {
     {
         Mux(self, other)
     }
+
+    /// Convert into a non-GAT operator.
+    fn into_operator<O>(self) -> Op<Self>
+    where
+        Self: for<'out> Operator<I, Output<'out> = O> + 'static,
+        Self: Sized,
+        I: 'static,
+    {
+        Op(self)
+    }
 }
 
 impl<I, P> OperatorExt<I> for P where P: Operator<I> {}
+
+/// Wrapper that Convert `P` into a non-GAT operator.
+#[derive(Debug, Clone, Copy)]
+pub struct Op<P>(P);
+
+impl<I, O, P> crate::Operator<I> for Op<P>
+where
+    P: for<'out> Operator<I, Output<'out> = O> + 'static,
+    I: 'static,
+{
+    type Output = O;
+
+    #[inline]
+    fn next(&mut self, input: I) -> Self::Output {
+        self.0.next(input)
+    }
+}

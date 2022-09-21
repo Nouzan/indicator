@@ -79,12 +79,7 @@ where
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
-}
 
-impl<T> TumblingQueue<T>
-where
-    T: Queue,
-{
     /// Enque an item and deque the oldest item if overflow.
     pub fn enque_and_deque_overflow(&mut self, item: T::Item) -> Option<T::Item> {
         if self.0.is_full() {

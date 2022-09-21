@@ -5,7 +5,7 @@ struct Collect {
     queue: Vec<usize>,
 }
 
-impl Operator<usize> for Collect {
+impl GatOperator<usize> for Collect {
     type Output<'out> = &'out [usize];
 
     fn next<'out>(&'out mut self, input: usize) -> Self::Output<'out>
@@ -19,7 +19,7 @@ impl Operator<usize> for Collect {
 
 struct Mux;
 
-impl<'a> Operator<&'a [usize]> for Mux {
+impl<'a> GatOperator<&'a [usize]> for Mux {
     type Output<'out> = Option<usize> where 'a: 'out;
 
     fn next<'out>(&'out mut self, input: &'a [usize]) -> Self::Output<'out>

@@ -1,6 +1,6 @@
 use crate::{TickValue, Tickable};
 
-use super::Operator;
+use super::GatOperator;
 
 /// Operator returns by [`map_t`].
 #[derive(Debug, Clone, Copy)]
@@ -10,7 +10,7 @@ pub struct TickMap<F>(pub(super) F);
 /// ```
 /// use indicator::{gat::*, TickValue};
 ///
-/// fn plus_one() -> impl for<'out> Operator<TickValue<usize>, Output<'out> = TickValue<usize>> {
+/// fn plus_one() -> impl for<'out> GatOperator<TickValue<usize>, Output<'out> = TickValue<usize>> {
 ///     map_t(|x| x + 1)
 /// }
 /// ```
@@ -21,7 +21,7 @@ where
     TickMap(f)
 }
 
-impl<I, O, F> Operator<I> for TickMap<F>
+impl<I, O, F> GatOperator<I> for TickMap<F>
 where
     I: Tickable,
     F: FnMut(I::Value) -> O,

@@ -1,15 +1,15 @@
-use super::Operator;
+use super::GatOperator;
 
-/// The [`Operator`] produces by [`then`](super::OperatorExt).
+/// The [`GatOperator`] produces by [`then`](super::OperatorExt).
 #[derive(Debug, Clone, Copy)]
 pub struct Then<P1, P2>(pub(crate) P1, pub(crate) P2);
 
-impl<I, P1, P2> Operator<I> for Then<P1, P2>
+impl<I, P1, P2> GatOperator<I> for Then<P1, P2>
 where
-    P1: Operator<I>,
-    P2: for<'out> Operator<P1::Output<'out>>,
+    P1: GatOperator<I>,
+    P2: for<'out> GatOperator<P1::Output<'out>>,
 {
-    type Output<'out> = <P2 as Operator<<P1 as Operator<I>>::Output<'out>>>::Output<'out>
+    type Output<'out> = <P2 as GatOperator<<P1 as GatOperator<I>>::Output<'out>>>::Output<'out>
     where
         I: 'out,
         P1: 'out,

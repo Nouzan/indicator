@@ -1,4 +1,4 @@
-use super::Operator;
+use super::GatOperator;
 
 /// Operator returns by [`map`].
 #[derive(Debug, Clone, Copy)]
@@ -8,7 +8,7 @@ pub struct Map<F>(pub(super) F);
 /// ```
 /// use indicator::gat::*;
 ///
-/// fn plus_one() -> impl for<'out> Operator<usize, Output<'out> = usize> {
+/// fn plus_one() -> impl for<'out> GatOperator<usize, Output<'out> = usize> {
 ///     map(|x| x + 1)
 /// }
 /// ```
@@ -19,7 +19,7 @@ where
     Map(f)
 }
 
-impl<I, O, F> Operator<I> for Map<F>
+impl<I, O, F> GatOperator<I> for Map<F>
 where
     F: FnMut(I) -> O,
 {

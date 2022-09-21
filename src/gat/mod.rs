@@ -4,5 +4,5 @@ pub mod operator;
 /// Helpers for operators with [`Tickable`](crate::Tickable) output.
 pub mod tick_operator;
 
-pub use operator::{identity::id, map::map, mux::mux, Operator, OperatorExt};
-pub use tick_operator::{tick_map::map_t, TickOperatorExt};
+pub use operator::{identity::id, map::map, mux::mux, GatOperator, GatOperatorExt};
+pub use tick_operator::{tick_map::map_t, TickGatOperatorExt};

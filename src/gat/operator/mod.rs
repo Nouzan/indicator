@@ -14,7 +14,7 @@ pub mod identity;
 
 /// Operator that produces indicator values by calling `next` method.
 /// It is just a version of `FnMut` with generic associated (lifetime) output.
-pub trait Operator<I> {
+pub trait GatOperator<I> {
     /// The output type.
     type Output<'out>
     where
@@ -27,9 +27,9 @@ pub trait Operator<I> {
         I: 'out;
 }
 
-impl<'a, I, P> Operator<I> for &'a mut P
+impl<'a, I, P> GatOperator<I> for &'a mut P
 where
-    P: Operator<I>,
+    P: GatOperator<I>,
 {
     type Output<'out> = P::Output<'out>
     where
@@ -44,20 +44,20 @@ where
     }
 }
 
-/// Helpers for [`Operator`].
-pub trait OperatorExt<I>: Operator<I> {
+/// Helpers for [`GatOperator`].
+pub trait GatOperatorExt<I>: GatOperator<I> {
     /// Combine two operators.
     /// ```
     /// use indicator::gat::*;
     ///
-    /// fn plus_one() -> impl for<'out> Operator<usize, Output<'out> = usize> {
+    /// fn plus_one() -> impl for<'out> GatOperator<usize, Output<'out> = usize> {
     ///     id().then(map(|x| x + 1))
     /// }
     /// ```
     fn then<P>(self, other: P) -> Then<Self, P>
     where
         Self: Sized,
-        P: for<'out> Operator<Self::Output<'out>>,
+        P: for<'out> GatOperator<Self::Output<'out>>,
     {
         Then(self, other)
     }
@@ -66,7 +66,7 @@ pub trait OperatorExt<I>: Operator<I> {
     /// ```
     /// use indicator::gat::*;
     ///
-    /// fn plus_two() -> impl for<'out> Operator<usize, Output<'out> = usize> {
+    /// fn plus_two() -> impl for<'out> GatOperator<usize, Output<'out> = usize> {
     ///     id().then(map(|x| x + 2))
     /// }
     /// ```
@@ -82,7 +82,7 @@ pub trait OperatorExt<I>: Operator<I> {
     /// ```
     /// use indicator::gat::*;
     ///
-    /// fn plus_mul() -> impl for<'out> Operator<usize, Output<'out> = usize> {
+    /// fn plus_mul() -> impl for<'out> GatOperator<usize, Output<'out> = usize> {
     ///     map(|x| x + 1).mux_with(map(|x| x * 2)).map(|(x, y)| x + y)
     /// }
     /// ```
@@ -90,7 +90,7 @@ pub trait OperatorExt<I>: Operator<I> {
     where
         I: Clone,
         Self: Sized,
-        P: Operator<I>,
+        P: GatOperator<I>,
     {
         Mux(self, other)
     }
@@ -98,7 +98,7 @@ pub trait OperatorExt<I>: Operator<I> {
     /// Convert into a non-GAT operator.
     fn into_operator<O>(self) -> Op<Self>
     where
-        Self: for<'out> Operator<I, Output<'out> = O> + 'static,
+        Self: for<'out> GatOperator<I, Output<'out> = O> + 'static,
         Self: Sized,
         I: 'static,
     {
@@ -106,7 +106,7 @@ pub trait OperatorExt<I>: Operator<I> {
     }
 }
 
-impl<I, P> OperatorExt<I> for P where P: Operator<I> {}
+impl<I, P> GatOperatorExt<I> for P where P: GatOperator<I> {}
 
 /// Wrapper that Convert `P` into a non-GAT operator.
 #[derive(Debug, Clone, Copy)]
@@ -114,7 +114,7 @@ pub struct Op<P>(P);
 
 impl<I, O, P> crate::Operator<I> for Op<P>
 where
-    P: for<'out> Operator<I, Output<'out> = O> + 'static,
+    P: for<'out> GatOperator<I, Output<'out> = O> + 'static,
     I: 'static,
 {
     type Output = O;

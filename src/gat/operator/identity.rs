@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use super::Operator;
+use super::GatOperator;
 
 /// Identity operator.
 pub struct Identity<I>(PhantomData<I>);
@@ -25,7 +25,7 @@ impl<I> Default for Identity<I> {
     }
 }
 
-impl<I> Operator<I> for Identity<I> {
+impl<I> GatOperator<I> for Identity<I> {
     type Output<'out> = I
     where
         Self: 'out,

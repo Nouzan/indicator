@@ -94,8 +94,9 @@ where
             self.last = *event.tick();
             if let Some(last) = queue.get(0).cloned() {
                 queue.push(last);
-                let output = self.op.push(queue.as_queue_ref(), event);
-                queue.swap(output);
+                let mut output = self.op.push(queue.as_queue_ref(), event);
+                let last = queue.get_mut(0).unwrap();
+                std::mem::swap(last, &mut output);
             } else {
                 let output = self.op.push(queue.as_queue_ref(), event);
                 queue.push(output);

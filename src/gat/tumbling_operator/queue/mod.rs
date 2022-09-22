@@ -268,6 +268,15 @@ where
     }
 }
 
+impl<'a, Q> DerefMut for ViewMut<'a, Q>
+where
+    Q: Queue + ?Sized,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.queue
+    }
+}
+
 impl<'a, Q> Index<usize> for ViewMut<'a, Q>
 where
     Q: Queue + ?Sized,

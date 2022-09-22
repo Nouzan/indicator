@@ -1,4 +1,4 @@
-use indicator::{gat::*, Period, Tick, TickValue, TumblingWindow};
+use indicator::prelude::*;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use time::{macros::datetime, UtcOffset};

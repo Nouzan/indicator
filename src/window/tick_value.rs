@@ -28,6 +28,17 @@ impl<T> TickValue<T> {
             value,
         }
     }
+
+    /// Map over the tick value.
+    pub fn map<U, F>(self, f: F) -> TickValue<U>
+    where
+        F: FnOnce(T) -> U,
+    {
+        TickValue {
+            tick: self.tick,
+            value: (f)(self.value),
+        }
+    }
 }
 
 impl<T> Tickable for TickValue<T> {
@@ -43,5 +54,18 @@ impl<T> Tickable for TickValue<T> {
 
     fn into_tick_value(self) -> TickValue<Self::Value> {
         self
+    }
+}
+
+impl<T> core::fmt::Display for TickValue<T>
+where
+    T: core::fmt::Display,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if let Some(ts) = self.tick.ts() {
+            write!(f, "({ts}, {})", self.value)
+        } else {
+            write!(f, "(*, {})", self.value)
+        }
     }
 }

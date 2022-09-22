@@ -85,6 +85,19 @@ pub mod rayon;
 #[cfg(feature = "async")]
 pub mod async_operator;
 
+/// Operator using GAT.
+#[cfg(feature = "gat")]
+pub mod gat;
+
+/// Prelude.
+pub mod prelude {
+    pub use crate::operator::{BoxOperator, LocalBoxOperator, Operator, OperatorExt};
+    pub use crate::window::{Period, Tick, TickValue, TumblingWindow};
+
+    #[cfg(feature = "gat")]
+    pub use crate::gat::*;
+}
+
 pub use iter::IndicatorIteratorExt;
 pub use operator::{facet, map, Operator, OperatorExt};
 pub use ticked::{

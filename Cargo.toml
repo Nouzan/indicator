@@ -19,10 +19,17 @@ parallel = ["rayon", "std"]
 async = ["futures", "pin-project-lite"]
 tower = ["std", "async", "tower-service"]
 
+gat = ["tinyvec"]
+
 [dependencies.arrayvec]
 version = "0.7"
 optional = true
 default-features = false
+
+[dependencies.tinyvec]
+ version = "1.6.0"
+ features = ["alloc", "rustc_1_55"]
+ optional = true
 
 [dependencies.time]
 version = "0.3"

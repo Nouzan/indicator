@@ -46,7 +46,7 @@ fn tsl(
     let rma = periodic::<2, _, _, _>(
         2,
         period,
-        peroidic_fn(
+        periodic_fn(
             move |w: QueueRef<TickValue<Decimal>>, x: TickValue<Decimal>, _n| {
                 let rma1 = w.get(1).map(|t| t.value).unwrap_or(x.value);
                 x.tick
@@ -84,7 +84,7 @@ fn tsl(
     let tsl = periodic::<2, _, _, _>(
         2,
         period,
-        peroidic_fn(
+        periodic_fn(
             |w: QueueRef<TickValue<(Decimal, bool)>>,
              x: TickValue<(Decimal, Decimal, Decimal)>,
              _n| {

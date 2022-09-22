@@ -19,7 +19,7 @@ pub trait Periodic<I, T> {
 pub struct PeroidicFn<F>(F);
 
 /// Create a [`PeroidicFn`].
-pub fn peroidic_fn<I, T, F>(f: F) -> impl Periodic<I, T>
+pub fn periodic_fn<I, T, F>(f: F) -> impl Periodic<I, T>
 where
     F: for<'a> FnMut(QueueRef<'a, T>, I, bool) -> T,
 {

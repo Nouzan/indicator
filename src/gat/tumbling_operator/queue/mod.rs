@@ -1,4 +1,4 @@
-use core::ops::Deref;
+use core::ops::{Deref, Index, IndexMut};
 
 /// Circular Queue.
 pub mod circular;
@@ -45,16 +45,63 @@ pub trait Queue {
     fn is_inline(&self) -> bool;
 }
 
+/// A change to the queue.
+#[derive(Debug, Clone, Copy)]
+pub enum Change<T> {
+    /// Enqued.
+    Push(Option<T>),
+    /// The latest value has been updated.
+    Swap(Option<T>),
+}
+
+impl<T> Change<T> {
+    /// As ref.
+    pub fn as_ref(&self) -> Change<&T> {
+        match self {
+            Self::Push(v) => Change::Push(v.as_ref()),
+            Self::Swap(v) => Change::Swap(v.as_ref()),
+        }
+    }
+
+    /// Convert into outdated.
+    pub fn outdated(self) -> Option<T> {
+        match self {
+            Self::Push(v) => v,
+            Self::Swap(v) => v,
+        }
+    }
+
+    fn as_push(&self) -> Option<&T> {
+        if let Self::Push(v) = self {
+            v.as_ref()
+        } else {
+            None
+        }
+    }
+
+    fn as_swap(&self) -> Option<&T> {
+        if let Self::Swap(v) = self {
+            v.as_ref()
+        } else {
+            None
+        }
+    }
+}
+
 /// The core tumbling queue.
 #[derive(Debug, Clone)]
-pub struct TumblingQueue<T>(T);
+pub struct Tumbling<Q: Queue>(Q, Change<Q::Item>);
 
-impl<T> TumblingQueue<T>
+impl<Q> Tumbling<Q>
 where
-    T: Queue,
+    Q: Queue,
 {
+    pub(crate) fn new(queue: Q) -> Self {
+        Self(queue, Change::Push(None))
+    }
+
     /// Enque an item and deque the oldest item if overflow.
-    pub fn enque_and_deque_overflow(&mut self, item: T::Item) -> Option<T::Item> {
+    fn enque_and_deque_overflow(&mut self, item: Q::Item) -> Option<Q::Item> {
         if self.0.is_full() {
             let oldest = self.0.deque();
             self.0.enque(item);
@@ -64,15 +111,60 @@ where
             None
         }
     }
+
+    /// Push.
+    #[inline]
+    pub fn push(&mut self, item: Q::Item) -> Option<&Q::Item> {
+        self.1 = Change::Push(self.enque_and_deque_overflow(item));
+        self.1.as_push()
+    }
+
+    /// Swap.
+    #[inline]
+    pub fn swap(&mut self, mut item: Q::Item) -> Option<&Q::Item> {
+        if let Some(head) = self.0.get_mut(0) {
+            core::mem::swap(head, &mut item);
+        }
+        self.1 = Change::Swap(Some(item));
+        self.1.as_swap()
+    }
+
+    /// Change.
+    #[inline]
+    pub fn change(&self) -> Change<&Q::Item> {
+        self.1.as_ref()
+    }
 }
 
-impl<T> Deref for TumblingQueue<T>
+impl<Q> Deref for Tumbling<Q>
 where
-    T: Queue,
+    Q: Queue,
 {
-    type Target = T;
+    type Target = Q;
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl<Q> Index<usize> for Tumbling<Q>
+where
+    Q: Queue,
+{
+    type Output = Q::Item;
+
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        self.0.get(index).expect("index out of range")
+    }
+}
+
+impl<Q> IndexMut<usize> for Tumbling<Q>
+where
+    Q: Queue,
+{
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.0.get_mut(index).expect("index out of range")
     }
 }

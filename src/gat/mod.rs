@@ -9,3 +9,7 @@ pub mod tumbling_operator;
 
 pub use operator::{identity::id, map::map, mux::mux, GatOperator, GatOperatorExt};
 pub use tick_operator::{map_tick::map_t, TickGatOperatorExt};
+pub use tumbling_operator::{
+    operator::{tumbling, TumblingOperator},
+    queue::{circular::Circular, Change, Queue, Tumbling},
+};

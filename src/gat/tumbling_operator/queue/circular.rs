@@ -16,7 +16,7 @@ use super::Queue;
 
 /// Circular Queue backed by [`TinyVec`].
 #[derive(Debug, Clone)]
-pub struct Circular<T, const N: usize> {
+pub struct Circular<T, const N: usize = 1> {
     inner: TinyVec<[Option<T>; N]>,
     cap: usize,
     next_tail: usize,

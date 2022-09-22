@@ -91,6 +91,7 @@ pub mod gat;
 
 /// Prelude.
 pub mod prelude {
+    pub use crate::operator::{BoxOperator, LocalBoxOperator, Operator, OperatorExt};
     pub use crate::window::{Period, Tick, TickValue, TumblingWindow};
 
     #[cfg(feature = "gat")]

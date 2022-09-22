@@ -6,7 +6,6 @@ use time::{macros::datetime, UtcOffset};
 fn main() {
     let period = Period::seconds(UtcOffset::UTC, 2);
     let cache = cache::<3, TickValue<_>>(3, period);
-
     let mut sms = Decimal::ZERO;
     let mut op = cache.map(|w| {
         assert!(w.is_inline());

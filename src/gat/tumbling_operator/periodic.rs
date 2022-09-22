@@ -20,6 +20,22 @@ where
     fn push(&mut self, queue: &Tumbling<Q>, event: I) -> Self::Output;
 }
 
+impl<Q, I, O, F> Periodic<I, Q> for F
+where
+    Q: Queue<Item = O>,
+    F: FnMut(&Tumbling<Q>, I, bool) -> O,
+{
+    type Output = O;
+
+    fn swap(&mut self, queue: &Tumbling<Q>, event: I) -> Self::Output {
+        (self)(queue, event, false)
+    }
+
+    fn push(&mut self, queue: &Tumbling<Q>, event: I) -> Self::Output {
+        (self)(queue, event, true)
+    }
+}
+
 /// Identity periodic operation.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Identity;

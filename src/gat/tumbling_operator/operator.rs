@@ -2,6 +2,23 @@ use crate::gat::GatOperator;
 
 use super::queue::{circular::Circular, Queue, Tumbling};
 
+/// Operation.
+pub trait Operation<I, Q: Queue> {
+    /// Step.
+    fn step(&mut self, w: &mut Tumbling<Q>, x: I);
+}
+
+impl<I, Q, F> Operation<I, Q> for F
+where
+    Q: Queue,
+    F: FnMut(&mut Tumbling<Q>, I),
+{
+    #[inline]
+    fn step(&mut self, w: &mut Tumbling<Q>, x: I) {
+        (self)(w, x)
+    }
+}
+
 /// Tumbling Operator.
 pub struct TumblingOperator<Q: Queue, P> {
     queue: Tumbling<Q>,
@@ -13,7 +30,7 @@ impl<Q: Queue, P> TumblingOperator<Q, P> {
     pub fn with_queue<I>(queue: Q, op: P) -> Self
     where
         Q: Queue,
-        P: FnMut(&mut Tumbling<Q>, I),
+        P: Operation<I, Q>,
     {
         Self {
             op,
@@ -25,7 +42,7 @@ impl<Q: Queue, P> TumblingOperator<Q, P> {
 impl<I, Q, P> GatOperator<I> for TumblingOperator<Q, P>
 where
     Q: Queue,
-    P: FnMut(&mut Tumbling<Q>, I),
+    P: Operation<I, Q>,
 {
     type Output<'out> = &'out Tumbling<Q>
     where
@@ -37,7 +54,7 @@ where
         I: 'out,
     {
         let Self { queue, op } = self;
-        (op)(queue, input);
+        op.step(queue, input);
         queue
     }
 }

@@ -5,21 +5,14 @@ use time::{macros::datetime, UtcOffset};
 
 fn main() {
     let period = Period::seconds(UtcOffset::UTC, 2);
-    let mut last_tick = Tick::BIG_BANG;
-    let cache = tumbling::<1, TickValue<_>, _, _>(3, move |w, x| {
-        if period.same_window(&last_tick, &x.tick) {
-            w.swap(x.value);
-        } else {
-            last_tick = x.tick;
-            w.push(x.value);
-        };
-    });
+    let cache = cache::<3, TickValue<_>>(3, period);
 
     let mut sms = Decimal::ZERO;
     let mut op = cache.map(|w| {
-        let outdated = w.change().outdated().copied().unwrap_or_default();
+        assert!(w.is_inline());
+        let outdated = w.change().outdated().map(|t| t.value).unwrap_or_default();
         debug_assert!(w.len() != 0);
-        sms += w[0] - outdated;
+        sms += w[0].value - outdated;
         let l = Decimal::new(w.len() as i64, 0);
         sms / l
     });

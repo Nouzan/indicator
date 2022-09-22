@@ -11,6 +11,6 @@ pub use operator::{identity::id, map::map, mux::mux, GatOperator, GatOperatorExt
 pub use tick_operator::{map_tick::map_t, TickGatOperatorExt};
 pub use tumbling_operator::{
     operator::{tumbling, view, TumblingOperator},
-    periodic::{cache, periodic, periodic_with, Periodic},
+    periodic::{cache, periodic, periodic_with, peroidic_fn, Periodic},
     queue::{circular::Circular, Change, Queue, QueueRef, Tumbling},
 };

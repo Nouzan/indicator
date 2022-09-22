@@ -2,37 +2,40 @@ use crate::{prelude::GatOperator, Period, Tick, Tickable, TumblingWindow};
 
 use super::{
     operator::{Operation, TumblingOperator},
-    queue::{circular::Circular, Collection, Queue, QueueRef, Tumbling},
+    queue::{circular::Circular, Collection, Queue, QueueMut, QueueRef},
 };
 
 /// Periodic Operation.
-pub trait Periodic<I, Q>
-where
-    Q: Queue<Item = Self::Output>,
-{
-    /// The output type.
-    type Output;
-
+pub trait Periodic<I, T> {
     /// Received an event from the same period.
-    fn swap(&mut self, queue: &Tumbling<Q>, event: I) -> Self::Output;
+    fn swap(&mut self, queue: QueueRef<T>, event: I) -> T;
 
     /// Received an event from a new period.
-    fn push(&mut self, queue: &Tumbling<Q>, event: I) -> Self::Output;
+    fn push(&mut self, queue: QueueRef<T>, event: I) -> T;
 }
 
-impl<Q, I, O, F> Periodic<I, Q> for F
-where
-    Q: Queue<Item = O>,
-    F: FnMut(&Tumbling<Q>, I, bool) -> O,
-{
-    type Output = O;
+/// Periodic `FnMut` wrapper.
+#[derive(Debug, Clone, Copy)]
+pub struct PeroidicFn<F>(F);
 
-    fn swap(&mut self, queue: &Tumbling<Q>, event: I) -> Self::Output {
-        (self)(queue, event, false)
+/// Create a [`PeroidicFn`].
+pub fn peroidic_fn<I, T, F>(f: F) -> impl Periodic<I, T>
+where
+    F: for<'a> FnMut(QueueRef<'a, T>, I, bool) -> T,
+{
+    PeroidicFn(f)
+}
+
+impl<I, T, F> Periodic<I, T> for PeroidicFn<F>
+where
+    F: for<'a> FnMut(QueueRef<'a, T>, I, bool) -> T,
+{
+    fn swap(&mut self, queue: QueueRef<T>, event: I) -> T {
+        (self.0)(queue, event, false)
     }
 
-    fn push(&mut self, queue: &Tumbling<Q>, event: I) -> Self::Output {
-        (self)(queue, event, true)
+    fn push(&mut self, queue: QueueRef<T>, event: I) -> T {
+        (self.0)(queue, event, true)
     }
 }
 
@@ -40,17 +43,12 @@ where
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Identity;
 
-impl<I, Q> Periodic<I, Q> for Identity
-where
-    Q: Queue<Item = I>,
-{
-    type Output = I;
-
-    fn swap(&mut self, _queue: &Tumbling<Q>, event: I) -> Self::Output {
+impl<I> Periodic<I, I> for Identity {
+    fn swap(&mut self, _queue: QueueRef<I>, event: I) -> I {
         event
     }
 
-    fn push(&mut self, _queue: &Tumbling<Q>, event: I) -> Self::Output {
+    fn push(&mut self, _queue: QueueRef<I>, event: I) -> I {
         event
     }
 }
@@ -73,19 +71,18 @@ impl<P> Op<P> {
     }
 }
 
-impl<I, Q, P> Operation<I, Q> for Op<P>
+impl<I, T, P> Operation<I, T> for Op<P>
 where
     I: Tickable,
-    P: Periodic<I, Q>,
-    Q: Queue<Item = P::Output>,
+    P: Periodic<I, T>,
 {
-    fn step(&mut self, queue: &mut Tumbling<Q>, event: I) {
+    fn step(&mut self, mut queue: QueueMut<T>, event: I) {
         if self.period.same_window(&self.last, event.tick()) {
-            let output = self.op.swap(queue, event);
+            let output = self.op.swap(queue.as_queue_ref(), event);
             queue.swap(output);
         } else {
             self.last = *event.tick();
-            let output = self.op.push(queue, event);
+            let output = self.op.push(queue.as_queue_ref(), event);
             queue.push(output);
         }
     }
@@ -95,8 +92,8 @@ where
 pub fn periodic_with<Q, I, P>(queue: Q, period: Period, op: P) -> TumblingOperator<Q, Op<P>>
 where
     I: Tickable,
-    P: Periodic<I, Q>,
-    Q: Queue<Item = P::Output>,
+    P: Periodic<I, Q::Item>,
+    Q: Queue,
 {
     TumblingOperator::with_queue(queue, Op::new(period, op))
 }
@@ -109,7 +106,7 @@ pub fn periodic<const N: usize, I, O, P>(
 ) -> TumblingOperator<Circular<O, N>, Op<P>>
 where
     I: Tickable,
-    P: Periodic<I, Circular<O, N>, Output = O>,
+    P: Periodic<I, O>,
 {
     TumblingOperator::with_queue(Circular::with_capacity(length), Op::new(period, op))
 }

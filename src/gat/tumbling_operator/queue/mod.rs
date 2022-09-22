@@ -1,4 +1,4 @@
-use core::ops::{Deref, Index};
+use core::ops::{Deref, DerefMut, Index, IndexMut};
 
 /// Circular Queue.
 pub mod circular;
@@ -46,6 +46,19 @@ pub trait Queue {
 
     /// Returns whether elements are on stack.
     fn is_inline(&self) -> bool;
+
+    /// Enque an item and deque the oldest item if overflow.
+    #[inline]
+    fn enque_and_deque_overflow(&mut self, item: Self::Item) -> Option<Self::Item> {
+        if self.is_full() {
+            let oldest = self.deque();
+            self.enque(item);
+            oldest
+        } else {
+            self.enque(item);
+            None
+        }
+    }
 }
 
 /// A change to the queue.
@@ -108,18 +121,6 @@ where
         Self(queue, Change::Push(None))
     }
 
-    /// Enque an item and deque the oldest item if overflow.
-    fn enque_and_deque_overflow(&mut self, item: Q::Item) -> Option<Q::Item> {
-        if self.0.is_full() {
-            let oldest = self.0.deque();
-            self.0.enque(item);
-            oldest
-        } else {
-            self.0.enque(item);
-            None
-        }
-    }
-
     /// Convert to a view of the queue.
     pub fn as_view<'a>(&'a self) -> View<'a, dyn Queue<Item = Q::Item> + 'a> {
         View {
@@ -133,28 +134,41 @@ where
         QueueRef(self.as_view())
     }
 
-    /// Push.
-    #[inline]
-    pub fn push(&mut self, item: Q::Item) -> Option<&Q::Item> {
-        self.1 = Change::Push(self.enque_and_deque_overflow(item));
-        self.1.as_push()
-    }
-
-    /// Swap.
-    #[inline]
-    pub fn swap(&mut self, mut item: Q::Item) -> Option<&Q::Item> {
-        if let Some(head) = self.0.get_mut(0) {
-            core::mem::swap(head, &mut item);
+    /// Convert to a mutable view of the queue.
+    pub fn as_view_mut<'a>(&'a mut self) -> ViewMut<'a, dyn Queue<Item = Q::Item> + 'a> {
+        ViewMut {
+            queue: &mut self.0,
+            change: &mut self.1,
         }
-        self.1 = Change::Swap(Some(item));
-        self.1.as_swap()
     }
 
-    /// Change.
-    #[inline]
-    pub fn change(&self) -> Change<&Q::Item> {
-        self.1.as_ref()
+    /// Convert to a [`QueueMut`].
+    pub fn as_queue_mut(&mut self) -> QueueMut<'_, Q::Item> {
+        QueueMut(self.as_view_mut())
     }
+
+    // /// Push.
+    // #[inline]
+    // pub fn push(&mut self, item: Q::Item) -> Option<&Q::Item> {
+    //     self.1 = Change::Push(self.0.enque_and_deque_overflow(item));
+    //     self.1.as_push()
+    // }
+
+    // /// Swap.
+    // #[inline]
+    // pub fn swap(&mut self, mut item: Q::Item) -> Option<&Q::Item> {
+    //     if let Some(head) = self.0.get_mut(0) {
+    //         core::mem::swap(head, &mut item);
+    //     }
+    //     self.1 = Change::Swap(Some(item));
+    //     self.1.as_swap()
+    // }
+
+    // /// Change.
+    // #[inline]
+    // pub fn change(&self) -> Change<&Q::Item> {
+    //     self.1.as_ref()
+    // }
 }
 
 impl<Q> Deref for Tumbling<Q>
@@ -235,12 +249,93 @@ impl<'a, T> Deref for QueueRef<'a, T> {
     }
 }
 
-// impl<Q> IndexMut<usize> for Tumbling<Q>
-// where
-//     Q: Queue,
-// {
-//     #[inline]
-//     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-//         self.0.get_mut(index).expect("index out of range")
-//     }
-// }
+/// A mutable view of the tumbling queue.
+pub struct ViewMut<'a, Q: Queue + ?Sized> {
+    queue: &'a mut Q,
+    change: &'a mut Change<Q::Item>,
+}
+
+impl<'a, Q: Queue + ?Sized> ViewMut<'a, Q> {
+    /// Push.
+    #[inline]
+    pub fn push(&mut self, item: Q::Item) -> Option<&Q::Item> {
+        *self.change = Change::Push(self.queue.enque_and_deque_overflow(item));
+        self.change.as_push()
+    }
+
+    /// Swap.
+    #[inline]
+    pub fn swap(&mut self, mut item: Q::Item) -> Option<&Q::Item> {
+        if let Some(head) = self.queue.get_mut(0) {
+            core::mem::swap(head, &mut item);
+        }
+        *self.change = Change::Swap(Some(item));
+        self.change.as_swap()
+    }
+
+    /// Change.
+    #[inline]
+    pub fn change(&self) -> Change<&Q::Item> {
+        self.change.as_ref()
+    }
+}
+
+impl<'a, Q> Deref for ViewMut<'a, Q>
+where
+    Q: Queue + ?Sized,
+{
+    type Target = Q;
+
+    fn deref(&self) -> &Self::Target {
+        self.queue
+    }
+}
+
+impl<'a, Q> Index<usize> for ViewMut<'a, Q>
+where
+    Q: Queue + ?Sized,
+{
+    type Output = Q::Item;
+
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        self.queue.get(index).expect("index out of range")
+    }
+}
+
+impl<'a, Q> IndexMut<usize> for ViewMut<'a, Q>
+where
+    Q: Queue,
+{
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.queue.get_mut(index).expect("index out of range")
+    }
+}
+
+/// A mutable reference of the tumbling queue.
+pub struct QueueMut<'a, T>(ViewMut<'a, dyn Queue<Item = T> + 'a>);
+
+impl<'a, T> QueueMut<'a, T> {
+    /// As [`QueueRef`]
+    pub fn as_queue_ref(&self) -> QueueRef<T> {
+        QueueRef(View {
+            queue: self.queue,
+            change: self.change.as_ref(),
+        })
+    }
+}
+
+impl<'a, T> Deref for QueueMut<'a, T> {
+    type Target = ViewMut<'a, dyn Queue<Item = T> + 'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a, T> DerefMut for QueueMut<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}

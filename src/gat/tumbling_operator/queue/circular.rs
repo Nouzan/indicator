@@ -12,7 +12,7 @@
 
 use tinyvec::TinyVec;
 
-use super::Queue;
+use super::{Collection, Queue};
 
 /// Circular Queue backed by [`TinyVec`].
 #[derive(Debug, Clone)]
@@ -64,9 +64,7 @@ impl<T, const N: usize> Circular<T, N> {
     }
 }
 
-impl<T, const N: usize> Queue for Circular<T, N> {
-    type Item = T;
-
+impl<T, const N: usize> Collection for Circular<T, N> {
     fn with_capacity(cap: usize) -> Self {
         assert!(cap != 0, "capacity cannot be zero");
         Self {
@@ -76,6 +74,10 @@ impl<T, const N: usize> Queue for Circular<T, N> {
             head: None,
         }
     }
+}
+
+impl<T, const N: usize> Queue for Circular<T, N> {
+    type Item = T;
 
     fn enque(&mut self, item: Self::Item) {
         let next_tail = self.entry_next_tail();

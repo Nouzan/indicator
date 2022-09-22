@@ -3,6 +3,8 @@ use core::cmp::{Ord, Ordering, PartialOrd};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
+use crate::TickValue;
+
 #[cfg(not(feature = "serde-derive"))]
 /// A tick in time.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -25,6 +27,11 @@ impl Tick {
     /// Get the timestamp.
     pub fn ts(&self) -> Option<&OffsetDateTime> {
         self.0.as_ref()
+    }
+
+    /// With value.
+    pub fn with_value<T>(self, value: T) -> TickValue<T> {
+        TickValue { tick: self, value }
     }
 }
 

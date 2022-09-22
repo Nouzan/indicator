@@ -56,3 +56,16 @@ impl<T> Tickable for TickValue<T> {
         self
     }
 }
+
+impl<T> core::fmt::Display for TickValue<T>
+where
+    T: core::fmt::Display,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if let Some(ts) = self.tick.ts() {
+            write!(f, "({ts}, {})", self.value)
+        } else {
+            write!(f, "(*, {})", self.value)
+        }
+    }
+}

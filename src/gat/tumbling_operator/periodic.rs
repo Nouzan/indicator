@@ -2,7 +2,7 @@ use crate::{prelude::GatOperator, Period, Tick, Tickable, TumblingWindow};
 
 use super::{
     operator::{Operation, TumblingOperator},
-    queue::{circular::Circular, Queue, Tumbling},
+    queue::{circular::Circular, Collection, Queue, QueueRef, Tumbling},
 };
 
 /// Periodic Operation.
@@ -92,13 +92,13 @@ where
 }
 
 /// Create a periodic operator.
-pub fn periodic_with<Q, I, P>(length: usize, period: Period, op: P) -> TumblingOperator<Q, Op<P>>
+pub fn periodic_with<Q, I, P>(queue: Q, period: Period, op: P) -> TumblingOperator<Q, Op<P>>
 where
     I: Tickable,
     P: Periodic<I, Q>,
     Q: Queue<Item = P::Output>,
 {
-    TumblingOperator::with_queue(Q::with_capacity(length), Op::new(period, op))
+    TumblingOperator::with_queue(queue, Op::new(period, op))
 }
 
 /// Create a new periodic operator with circular queue.
@@ -118,9 +118,9 @@ where
 pub fn cache<const N: usize, I>(
     length: usize,
     period: Period,
-) -> impl for<'out> GatOperator<I, Output<'out> = &'out Tumbling<Circular<I, N>>>
+) -> impl for<'out> GatOperator<I, Output<'out> = QueueRef<'out, I>>
 where
     I: Tickable + 'static,
 {
-    periodic(length, period, Identity)
+    periodic::<N, _, _, _>(length, period, Identity)
 }

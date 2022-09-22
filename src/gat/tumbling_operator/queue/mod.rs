@@ -1,15 +1,18 @@
-use core::ops::{Deref, Index, IndexMut};
+use core::ops::{Deref, Index};
 
 /// Circular Queue.
 pub mod circular;
+
+/// Collection.
+pub trait Collection {
+    /// Create a new queue with the given capacity.
+    fn with_capacity(cap: usize) -> Self;
+}
 
 /// Queue.
 pub trait Queue {
     /// Item.
     type Item;
-
-    /// Create a new queue with the given capacity.
-    fn with_capacity(cap: usize) -> Self;
 
     /// Enque.
     fn enque(&mut self, item: Self::Item);
@@ -71,6 +74,11 @@ impl<T> Change<T> {
         }
     }
 
+    /// Check if it is a new peirod change (push).
+    pub fn is_new_period(&self) -> bool {
+        matches!(self, Self::Push(_))
+    }
+
     fn as_push(&self) -> Option<&T> {
         if let Self::Push(v) = self {
             v.as_ref()
@@ -112,6 +120,19 @@ where
         }
     }
 
+    /// Convert to a view of the queue.
+    pub fn as_view<'a>(&'a self) -> View<'a, dyn Queue<Item = Q::Item> + 'a> {
+        View {
+            queue: &self.0,
+            change: self.1.as_ref(),
+        }
+    }
+
+    /// Convert to a [`QueueRef`].
+    pub fn as_queue_ref(&self) -> QueueRef<'_, Q::Item> {
+        QueueRef(self.as_view())
+    }
+
     /// Push.
     #[inline]
     pub fn push(&mut self, item: Q::Item) -> Option<&Q::Item> {
@@ -147,24 +168,79 @@ where
     }
 }
 
-impl<Q> Index<usize> for Tumbling<Q>
+/// A view of the tumbling queue.
+pub struct View<'a, Q: Queue + ?Sized> {
+    queue: &'a Q,
+    change: Change<&'a Q::Item>,
+}
+
+impl<'a, Q: Queue + ?Sized> Clone for View<'a, Q> {
+    fn clone(&self) -> Self {
+        Self {
+            queue: self.queue,
+            change: self.change,
+        }
+    }
+}
+
+impl<'a, Q: Queue + ?Sized> Copy for View<'a, Q> {}
+
+impl<'a, Q: Queue + ?Sized> View<'a, Q> {
+    /// Change.
+    #[inline]
+    pub fn change(&self) -> Change<&Q::Item> {
+        self.change
+    }
+}
+
+impl<'a, Q> Deref for View<'a, Q>
 where
-    Q: Queue,
+    Q: Queue + ?Sized,
+{
+    type Target = Q;
+
+    fn deref(&self) -> &Self::Target {
+        self.queue
+    }
+}
+
+impl<'a, Q> Index<usize> for View<'a, Q>
+where
+    Q: Queue + ?Sized,
 {
     type Output = Q::Item;
 
     #[inline]
     fn index(&self, index: usize) -> &Self::Output {
-        self.0.get(index).expect("index out of range")
+        self.queue.get(index).expect("index out of range")
     }
 }
 
-impl<Q> IndexMut<usize> for Tumbling<Q>
-where
-    Q: Queue,
-{
-    #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.0.get_mut(index).expect("index out of range")
+/// A reference of the tumbling queue.
+pub struct QueueRef<'a, T>(View<'a, dyn Queue<Item = T> + 'a>);
+
+impl<'a, T> Clone for QueueRef<'a, T> {
+    fn clone(&self) -> Self {
+        Self(self.0)
     }
 }
+
+impl<'a, T> Copy for QueueRef<'a, T> {}
+
+impl<'a, T> Deref for QueueRef<'a, T> {
+    type Target = View<'a, dyn Queue<Item = T> + 'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+// impl<Q> IndexMut<usize> for Tumbling<Q>
+// where
+//     Q: Queue,
+// {
+//     #[inline]
+//     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+//         self.0.get_mut(index).expect("index out of range")
+//     }
+// }

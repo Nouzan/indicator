@@ -241,6 +241,18 @@ impl Period {
         }
     }
 
+    /// Seconds.
+    pub fn secs(seconds: u64) -> Self {
+        if seconds == 0 {
+            Self::zero()
+        } else {
+            Self {
+                offset: UtcOffset::UTC,
+                kind: PeriodKind::Duration(Duration::from_secs(seconds as u64)),
+            }
+        }
+    }
+
     /// Convert period to [`Duration`].
     ///
     /// Return `None` if period is a year or a month.

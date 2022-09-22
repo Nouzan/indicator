@@ -146,29 +146,6 @@ where
     pub fn as_queue_mut(&mut self) -> QueueMut<'_, Q::Item> {
         QueueMut(self.as_view_mut())
     }
-
-    // /// Push.
-    // #[inline]
-    // pub fn push(&mut self, item: Q::Item) -> Option<&Q::Item> {
-    //     self.1 = Change::Push(self.0.enque_and_deque_overflow(item));
-    //     self.1.as_push()
-    // }
-
-    // /// Swap.
-    // #[inline]
-    // pub fn swap(&mut self, mut item: Q::Item) -> Option<&Q::Item> {
-    //     if let Some(head) = self.0.get_mut(0) {
-    //         core::mem::swap(head, &mut item);
-    //     }
-    //     self.1 = Change::Swap(Some(item));
-    //     self.1.as_swap()
-    // }
-
-    // /// Change.
-    // #[inline]
-    // pub fn change(&self) -> Change<&Q::Item> {
-    //     self.1.as_ref()
-    // }
 }
 
 impl<Q> Deref for Tumbling<Q>

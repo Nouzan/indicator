@@ -8,7 +8,7 @@ fn tsl(
     factor: Decimal,
     period: Period,
 ) -> impl Operator<TickValue<Decimal>, Output = TickValue<Decimal>> {
-    let close = cache::<2, TickValue<Decimal>>(2, period);
+    let close = Periodic::with_circular_n::<2, TickValue<Decimal>>(period).build_cache();
 
     let high = {
         let mut high = Decimal::ZERO;
@@ -43,17 +43,13 @@ fn tsl(
 
     // rma = (1 - 1/l) * x + 1/l * rma[1]
     let alpha = Decimal::ONE / length;
-    let rma = periodic::<2, _, _, _>(
-        2,
-        period,
-        periodic_fn(
-            move |w: QueueRef<TickValue<Decimal>>, x: TickValue<Decimal>, _n| {
-                let rma1 = w.get(1).map(|t| t.value).unwrap_or(x.value);
-                x.tick
-                    .with_value((Decimal::ONE - alpha) * x.value + alpha * rma1)
-            },
-        ),
-    );
+    let rma = Periodic::with_circular_n::<2, TickValue<Decimal>>(period)
+        .push_first()
+        .build_fn(move |w, _n, x: TickValue<Decimal>| {
+            let rma1 = w.get(1).map(|t| t.value).unwrap_or(x.value);
+            x.tick
+                .with_value((Decimal::ONE - alpha) * x.value + alpha * rma1)
+        });
 
     let atr = map(
         |(((_close0, close1), high), low): (
@@ -81,39 +77,33 @@ fn tsl(
     //       up if last <= tsl[1] && long[1]
     //       max(tsl[1], down) if long[1]
     //       min(tsl[1], up) if !long[1]
-    let tsl = periodic::<2, _, _, _>(
-        2,
-        period,
-        periodic_fn(
-            |w: QueueRef<TickValue<(Decimal, bool)>>,
-             x: TickValue<(Decimal, Decimal, Decimal)>,
-             _n| {
-                if let Some(tsl1) = w.get(1) {
-                    let TickValue {
-                        tick,
-                        value: (last, up, down),
-                    } = x;
-                    let long1 = tsl1.value.1;
-                    let tsl1 = tsl1.value.0;
-                    let v = if long1 {
-                        let cross = last <= tsl1;
-                        let tsl = if cross { up } else { tsl1.max(down) };
-                        (tsl, !cross)
-                    } else {
-                        let cross = last >= tsl1;
-                        let tsl = if cross { down } else { tsl1.min(up) };
-                        (tsl, cross)
-                    };
-                    tick.with_value(v)
+    let tsl = Periodic::with_circular_n::<2, TickValue<(Decimal, bool)>>(period)
+        .push_first()
+        .build_fn(|w, _n, x: TickValue<(Decimal, Decimal, Decimal)>| {
+            if let Some(tsl1) = w.get(1) {
+                let TickValue {
+                    tick,
+                    value: (last, up, down),
+                } = x;
+                let long1 = tsl1.value.1;
+                let tsl1 = tsl1.value.0;
+                let v = if long1 {
+                    let cross = last <= tsl1;
+                    let tsl = if cross { up } else { tsl1.max(down) };
+                    (tsl, !cross)
                 } else {
-                    x.map(|(_, _, down)| (down, true))
-                }
-            },
-        ),
-    )
-    .then(view(|w: QueueRef<TickValue<(Decimal, bool)>>| {
-        w[0].map(|v| v.0)
-    }));
+                    let cross = last >= tsl1;
+                    let tsl = if cross { down } else { tsl1.min(up) };
+                    (tsl, cross)
+                };
+                tick.with_value(v)
+            } else {
+                x.map(|(_, _, down)| (down, true))
+            }
+        })
+        .then(view(|w: QueueRef<TickValue<(Decimal, bool)>>| {
+            w[0].map(|v| v.0)
+        }));
 
     close
         .then(cache0.mux_with(cache1).mux_with(high).mux_with(low))
@@ -134,7 +124,8 @@ fn main() {
 
     for x in [
         TickValue::new(datetime!(2022-09-22 00:00:00 +00:00), dec!(100)),
-        TickValue::new(datetime!(2022-09-22 00:00:01 +00:00), dec!(102)),
+        TickValue::new(datetime!(2022-09-22 00:00:01 +00:00), dec!(101)),
+        TickValue::new(datetime!(2022-09-22 00:00:02 +00:00), dec!(102)),
         TickValue::new(datetime!(2022-09-22 00:00:02 +00:00), dec!(103)),
         TickValue::new(datetime!(2022-09-22 00:00:03 +00:00), dec!(104)),
         TickValue::new(datetime!(2022-09-22 00:00:04 +00:00), dec!(105)),

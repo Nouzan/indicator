@@ -1,14 +1,7 @@
-use indicator::prelude::*;
+use indicator::prelude::{utils::queue_ref, *};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use time::{macros::datetime, UtcOffset};
-
-fn queue_ref<I, O, F>(f: F) -> F
-where
-    F: for<'a> FnMut(QueueRef<'a, I>) -> O,
-{
-    f
-}
 
 fn tsl(
     length: Decimal,

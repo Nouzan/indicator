@@ -3,6 +3,13 @@ use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use time::{macros::datetime, UtcOffset};
 
+fn queue_ref<I, O, F>(f: F) -> F
+where
+    F: for<'a> FnMut(QueueRef<'a, I>) -> O,
+{
+    f
+}
+
 fn tsl(
     length: Decimal,
     factor: Decimal,
@@ -12,34 +19,34 @@ fn tsl(
 
     let high = {
         let mut high = Decimal::ZERO;
-        view(move |w: QueueRef<TickValue<Decimal>>| {
+        map(queue_ref(move |w: QueueRef<TickValue<_>>| {
             if w.change().is_new_period() {
                 high = w[0].value;
             } else {
                 high = w[0].value.max(high);
             }
             high
-        })
+        }))
     };
 
     let low = {
         let mut low = Decimal::ZERO;
-        view(move |w: QueueRef<TickValue<Decimal>>| {
+        map(queue_ref(move |w: QueueRef<TickValue<Decimal>>| {
             if w.change().is_new_period() {
                 low = w[0].value;
             } else {
                 low = w[0].value.min(low);
             }
             low
-        })
+        }))
     };
 
-    let cache0 = view(|w: QueueRef<TickValue<Decimal>>| w[0]);
+    let cache0 = map(queue_ref(|w: QueueRef<TickValue<Decimal>>| w[0]));
 
-    let cache1 = view(|w: QueueRef<TickValue<Decimal>>| {
+    let cache1 = map(queue_ref(|w: QueueRef<TickValue<Decimal>>| {
         let close1 = w.get(1).map(|t| t.value);
         w[0].tick.with_value(close1)
-    });
+    }));
 
     // rma = (1 - 1/l) * x + 1/l * rma[1]
     let alpha = Decimal::ONE / length;
@@ -68,7 +75,7 @@ fn tsl(
         },
     )
     .then(rma)
-    .then(view(|w| w[0]));
+    .map(queue_ref(|w: QueueRef<TickValue<Decimal>>| w[0]));
 
     // long = true if last >= tsl[1] && !long[1]
     //        false if last <= tsl[1] && long[1]
@@ -101,7 +108,7 @@ fn tsl(
                 x.map(|(_, _, down)| (down, true))
             }
         })
-        .then(view(|w: QueueRef<TickValue<(Decimal, bool)>>| {
+        .map(queue_ref(|w: QueueRef<TickValue<(Decimal, bool)>>| {
             w[0].map(|v| v.0)
         }));
 

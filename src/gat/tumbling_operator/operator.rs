@@ -68,34 +68,3 @@ where
 {
     TumblingOperator::with_queue(Circular::with_capacity(length), op)
 }
-
-/// View Operator.
-#[derive(Debug, Clone, Copy)]
-pub struct ViewOperator<F> {
-    f: F,
-}
-
-impl<'a, I, O, F> GatOperator<QueueRef<'a, I>> for ViewOperator<F>
-where
-    F: for<'input> FnMut(QueueRef<'input, I>) -> O,
-{
-    type Output<'out> = O
-    where
-        Self: 'out,
-        'a: 'out;
-
-    fn next<'out>(&'out mut self, input: QueueRef<'a, I>) -> Self::Output<'out>
-    where
-        'a: 'out,
-    {
-        (self.f)(input)
-    }
-}
-
-/// Create a new view operator from a closure.
-pub fn view<I, O, F>(f: F) -> ViewOperator<F>
-where
-    F: for<'input> FnMut(QueueRef<'input, I>) -> O,
-{
-    ViewOperator { f }
-}

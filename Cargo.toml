@@ -1,6 +1,6 @@
 [package]
 name = "indicator"
-version = "0.3.0-alpha.6"
+version = "0.3.0-alpha.7"
 edition = "2021"
 authors = ["Nouzan"]
 license = "MIT"

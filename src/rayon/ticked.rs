@@ -32,7 +32,7 @@ where
     )>;
 
     fn next(&mut self, input: I) -> Self::Output {
-        let tick = *input.tick();
+        let tick = input.tick();
         let i1 = input.clone();
         let (o1, o2) = rayon::join(
             || self.0.next(i1).into_tick_value().value,
@@ -60,7 +60,7 @@ where
     type Output = TickValue<HashMap<Q, <P::Output as Tickable>::Value>>;
 
     fn next(&mut self, input: I) -> Self::Output {
-        let tick = *input.tick();
+        let tick = input.tick();
         let value = self
             .0
             .par_iter_mut()

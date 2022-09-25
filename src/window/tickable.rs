@@ -7,7 +7,7 @@ pub trait Tickable {
     type Value;
 
     /// Get the tick.
-    fn tick(&self) -> &Tick;
+    fn tick(&self) -> Tick;
 
     /// Get the value.
     fn value(&self) -> &Self::Value;

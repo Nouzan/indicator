@@ -69,11 +69,11 @@ where
     P: PeriodicOp<I, T>,
 {
     fn step(&mut self, mut queue: QueueMut<T>, event: I) {
-        if self.period.same_window(&self.last, event.tick()) {
+        if self.period.same_window(&self.last, &event.tick()) {
             let output = self.op.swap(queue.as_queue_ref(), event);
             queue.swap(output);
         } else {
-            self.last = *event.tick();
+            self.last = event.tick();
             let output = self.op.push(queue.as_queue_ref(), event);
             queue.push(output);
         }
@@ -87,11 +87,11 @@ where
     P: PeriodicOp<I, T>,
 {
     fn step(&mut self, mut queue: QueueMut<T>, event: I) {
-        if self.period.same_window(&self.last, event.tick()) {
+        if self.period.same_window(&self.last, &event.tick()) {
             let output = self.op.swap(queue.as_queue_ref(), event);
             queue.swap(output);
         } else {
-            self.last = *event.tick();
+            self.last = event.tick();
             if let Some(last) = queue.get(0).cloned() {
                 queue.push(last);
                 let mut output = self.op.push(queue.as_queue_ref(), event);

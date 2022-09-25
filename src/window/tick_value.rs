@@ -44,8 +44,8 @@ impl<T> TickValue<T> {
 impl<T> Tickable for TickValue<T> {
     type Value = T;
 
-    fn tick(&self) -> &Tick {
-        &self.tick
+    fn tick(&self) -> Tick {
+        self.tick
     }
 
     fn value(&self) -> &Self::Value {

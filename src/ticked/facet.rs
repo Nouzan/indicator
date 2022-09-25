@@ -29,7 +29,7 @@ where
     )>;
 
     fn next(&mut self, input: I) -> Self::Output {
-        let tick = *input.tick();
+        let tick = input.tick();
         let o1 = self.0.next(input.clone()).into_tick_value().value;
         let o2 = self.1.next(input).into_tick_value().value;
         TickValue {
@@ -59,7 +59,7 @@ mod facet_map {
         type Output = TickValue<HashMap<Q, <P::Output as Tickable>::Value>>;
 
         fn next(&mut self, input: I) -> Self::Output {
-            let tick = *input.tick();
+            let tick = input.tick();
             let value = self
                 .0
                 .iter_mut()

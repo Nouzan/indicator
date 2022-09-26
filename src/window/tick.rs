@@ -6,10 +6,58 @@ use time::OffsetDateTime;
 
 use crate::TickValue;
 
+#[cfg(feature = "serde")]
+mod rfc3339 {
+    use serde::{Deserializer, Serializer};
+    use time::{serde::rfc3339, OffsetDateTime};
+
+    /// Serialize an [`Option<OffsetDateTime>`] using the well-known RFC3339 format.
+    pub(super) fn serialize<S: Serializer>(
+        datetime: &Option<OffsetDateTime>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        match datetime {
+            Some(datetime) => rfc3339::serialize(datetime, serializer),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    /// Deserialize an [`OffsetDateTime`] from its RFC3339 representation.
+    pub(super) fn deserialize<'a, D: Deserializer<'a>>(
+        deserializer: D,
+    ) -> Result<Option<OffsetDateTime>, D::Error> {
+        struct Visitor;
+
+        impl<'de> serde::de::Visitor<'de> for Visitor {
+            type Value = Option<OffsetDateTime>;
+
+            fn expecting(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+                write!(f, "a optional timestamp str in RFC3339 format")
+            }
+
+            fn visit_none<E>(self) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Ok(None)
+            }
+
+            fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                Ok(Some(rfc3339::deserialize(deserializer)?))
+            }
+        }
+
+        deserializer.deserialize_option(Visitor)
+    }
+}
+
 /// A tick in time.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Tick(Option<OffsetDateTime>);
+pub struct Tick(#[cfg_attr(feature = "serde", serde(with = "rfc3339"))] Option<OffsetDateTime>);
 
 impl Tick {
     /// "The Big Bang" tick.
@@ -51,5 +99,42 @@ impl PartialOrd for Tick {
 impl Ord for Tick {
     fn cmp(&self, other: &Self) -> Ordering {
         self.partial_cmp(other).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_big_bang() {
+        assert_eq!(Tick::BIG_BANG, Tick::BIG_BANG);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serialize_tick() {
+        use time::macros::datetime;
+
+        let tick = Tick::BIG_BANG;
+        assert_eq!(serde_json::to_string(&tick).unwrap(), r#"null"#);
+
+        let tick = Tick::new(datetime!(2022-09-26 01:23:45 +06:54));
+        assert_eq!(
+            serde_json::to_string(&tick).unwrap(),
+            r#""2022-09-26T01:23:45+06:54""#
+        );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn deserialize_tick() {
+        use time::macros::datetime;
+
+        let tick = serde_json::from_str::<Tick>(r#"null"#).unwrap();
+        assert_eq!(tick, Tick::BIG_BANG);
+
+        let tick = serde_json::from_str::<Tick>(r#""2022-09-26T01:23:45+06:54""#).unwrap();
+        assert_eq!(tick, Tick::new(datetime!(2022-09-26 01:23:45 +06:54)),);
     }
 }

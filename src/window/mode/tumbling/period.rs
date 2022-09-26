@@ -3,6 +3,9 @@ use super::TumblingWindow;
 use core::{cmp::Ordering, fmt, hash::Hash, time::Duration};
 use time::{OffsetDateTime, UtcOffset};
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// Period kind.
 #[derive(Debug, Clone, Copy)]
 pub enum PeriodKind {
@@ -127,12 +130,73 @@ impl PartialOrd for PeriodKind {
     }
 }
 
+#[cfg(feature = "serde")]
+impl Serialize for PeriodKind {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Year => serializer.serialize_str("year"),
+            Self::Month => serializer.serialize_str("month"),
+            Self::Duration(dur) => {
+                let formatted = humantime::format_duration(*dur);
+                serializer.collect_str(&formatted)
+            }
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for PeriodKind {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct Visitor;
+
+        impl<'de> serde::de::Visitor<'de> for Visitor {
+            type Value = PeriodKind;
+
+            fn expecting(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+                write!(f, "\"year\", \"month\" or any `str` that is parsable by `humantime::parse_duration`")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                let kind = match v {
+                    "year" => PeriodKind::Year,
+                    "month" => PeriodKind::Month,
+                    v => {
+                        let dur = humantime::parse_duration(v)
+                            .map_err(|_| E::invalid_value(serde::de::Unexpected::Str(v), &self))?;
+                        PeriodKind::Duration(dur)
+                    }
+                };
+                Ok(kind)
+            }
+        }
+
+        deserializer.deserialize_str(Visitor)
+    }
+}
+
+#[cfg(feature = "serde")]
+fn default_offset() -> UtcOffset {
+    UtcOffset::UTC
+}
+
 /// Period mode (A tumbling window).
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Period {
     /// UTC offset.
+    #[cfg_attr(feature = "serde", serde(default = "default_offset"))]
     pub offset: UtcOffset,
     /// Period kind.
+    #[cfg_attr(feature = "serde", serde(rename = "period"))]
     pub kind: PeriodKind,
 }
 
@@ -333,26 +397,19 @@ impl fmt::Display for PeriodKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Year => {
-                write!(f, "y1")
+                write!(f, "year")
             }
             Self::Month => {
-                write!(f, "mon1")
+                write!(f, "month")
             }
             Self::Duration(d) => {
                 #[cfg(not(feature = "humantime"))]
                 {
-                    write!(f, "s{}", d.as_secs())
+                    write!(f, "{}s", d.as_secs())
                 }
                 #[cfg(feature = "humantime")]
                 {
-                    write!(
-                        f,
-                        "{}",
-                        format_duration(*d)
-                            .to_string()
-                            .split_whitespace()
-                            .collect::<String>()
-                    )
+                    write!(f, "{}", format_duration(*d))
                 }
             }
         }
@@ -361,13 +418,13 @@ impl fmt::Display for PeriodKind {
 
 impl fmt::Display for Period {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}({})", self.kind, self.offset.whole_hours())
+        write!(f, "({}, {})", self.kind, self.offset.whole_hours())
     }
 }
 
 #[cfg(test)]
-mod test {
-    use super::{Period, TumblingWindow};
+mod tests {
+    use super::*;
     use time::macros::{datetime, offset};
     use time::UtcOffset;
 
@@ -416,5 +473,83 @@ mod test {
     fn to_string() {
         let mode = Period::hours(offset!(+8), 2);
         println!("{}", mode);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serialize_period_kind() {
+        let kind = PeriodKind::Year;
+        assert_eq!(serde_json::to_string(&kind).unwrap(), r#""year""#);
+
+        let kind = PeriodKind::Month;
+        assert_eq!(serde_json::to_string(&kind).unwrap(), r#""month""#);
+
+        let dur = Duration::from_secs(12346789);
+        let kind = PeriodKind::Duration(dur);
+        assert_eq!(
+            serde_json::to_string(&kind).unwrap(),
+            format!(r#""{}""#, humantime::format_duration(dur))
+        );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn deserialize_period_kind() {
+        let kind = serde_json::from_str::<PeriodKind>(r#""year""#).unwrap();
+        assert_eq!(kind, PeriodKind::Year);
+
+        let kind = serde_json::from_str::<PeriodKind>(r#""month""#).unwrap();
+        assert_eq!(kind, PeriodKind::Month);
+
+        let kind = serde_json::from_str::<PeriodKind>(r#""3m 4s""#).unwrap();
+        assert_eq!(kind, PeriodKind::Duration(Duration::from_secs(184)),);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serialize_period() {
+        let period = Period::year(UtcOffset::UTC);
+        assert_eq!(
+            serde_json::to_string(&period).unwrap(),
+            r#"{"offset":"+00:00:00","period":"year"}"#
+        );
+
+        let period = Period::month(offset!(-01:23:45));
+        assert_eq!(
+            serde_json::to_string(&period).unwrap(),
+            r#"{"offset":"-01:23:45","period":"month"}"#
+        );
+
+        let period = Period::hours(UtcOffset::UTC, 3);
+        assert_eq!(
+            serde_json::to_string(&period).unwrap(),
+            r#"{"offset":"+00:00:00","period":"3h"}"#
+        );
+
+        let period = Period::minutes(UtcOffset::UTC, 42);
+        assert_eq!(
+            serde_json::to_string(&period).unwrap(),
+            r#"{"offset":"+00:00:00","period":"42m"}"#
+        );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn deserialize_period() {
+        let period =
+            serde_json::from_str::<Period>(r#"{"offset":"+00:00:00","period":"year"}"#).unwrap();
+        assert_eq!(period, Period::year(UtcOffset::UTC),);
+
+        let period =
+            serde_json::from_str::<Period>(r#"{"offset":"-01:23:45","period":"month"}"#).unwrap();
+        assert_eq!(period, Period::month(offset!(-01:23:45)),);
+
+        let period =
+            serde_json::from_str::<Period>(r#"{"offset":"+00:00:00","period":"3h"}"#).unwrap();
+        assert_eq!(period, Period::hours(UtcOffset::UTC, 3),);
+
+        let period =
+            serde_json::from_str::<Period>(r#"{"offset":"+00:00:00","period":"42m"}"#).unwrap();
+        assert_eq!(period, Period::minutes(UtcOffset::UTC, 42),);
     }
 }

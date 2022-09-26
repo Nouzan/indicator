@@ -14,7 +14,7 @@ default = ["std", "stream", "array-vec"]
 std = ["time/std", "futures/std"]
 array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
-serde-derive = ["serde", "time/serde"]
+serde = ["dep:serde", "time/serde-human-readable", "humantime"]
 parallel = ["rayon", "std"]
 async = ["futures", "pin-project-lite"]
 tower = ["std", "async", "tower-service"]
@@ -68,3 +68,4 @@ rust_decimal_macros = "1.17.0"
 arrayvec = "0.7"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1"
+serde_json = "1"

@@ -1,18 +1,14 @@
-use core::cmp::{Ord, Ordering, PartialOrd};
-#[cfg(feature = "serde-derive")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+
+use core::cmp::{Ord, Ordering, PartialOrd};
 use time::OffsetDateTime;
 
 use crate::TickValue;
 
-#[cfg(not(feature = "serde-derive"))]
 /// A tick in time.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Tick(Option<OffsetDateTime>);
-
-#[cfg(feature = "serde-derive")]
-/// A tick in time.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct Tick(Option<OffsetDateTime>);
 
 impl Tick {

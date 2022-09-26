@@ -488,7 +488,7 @@ mod tests {
         let kind = PeriodKind::Duration(dur);
         assert_eq!(
             serde_json::to_string(&kind).unwrap(),
-            format!(r#""{}""#, humantime::format_duration(dur))
+            r#""4months 21days 3h 25m 25s""#,
         );
     }
 

@@ -96,7 +96,7 @@ where
                 queue.push(last);
                 let mut output = self.op.push(queue.as_queue_ref(), event);
                 let last = queue.get_mut(0).unwrap();
-                std::mem::swap(last, &mut output);
+                core::mem::swap(last, &mut output);
             } else {
                 let output = self.op.push(queue.as_queue_ref(), event);
                 queue.push(output);
@@ -230,7 +230,10 @@ mod tests {
             TickValue::new(datetime!(2022-09-23 00:00:05 +00:00), 6),
             TickValue::new(datetime!(2022-09-23 00:00:06 +00:00), 7),
         ] {
+            #[cfg(feature = "std")]
             println!("{}", op.next(x)[0]);
+            #[cfg(not(feature = "std"))]
+            op.next(x);
         }
     }
 
@@ -260,7 +263,10 @@ mod tests {
             TickValue::new(datetime!(2022-09-23 00:00:05 +00:00), 6),
             TickValue::new(datetime!(2022-09-23 00:00:06 +00:00), 7),
         ] {
+            #[cfg(feature = "std")]
             println!("{}", op.next(x)[0]);
+            #[cfg(not(feature = "std"))]
+            op.next(x);
         }
     }
 }

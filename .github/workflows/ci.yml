@@ -60,28 +60,28 @@ jobs:
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: clippy
-              args: --all --features array-vec,stream,serde-derive,parallel
+              args: --all --features array-vec,stream,serde,parallel
 
           - name: Build
             uses: actions-rs/cargo@v1
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: build
-              args: --features array-vec,stream,serde-derive,parallel
+              args: --features array-vec,stream,serde,parallel
 
           - name: Test
             uses: actions-rs/cargo@v1
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: test
-              args: --lib --features array-vec,stream,serde-derive,parallel
+              args: --lib --features array-vec,stream,serde,parallel
 
           - name: Test for no-std
             uses: actions-rs/cargo@v1
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: test
-              args: --lib --features array-vec,stream,serde-derive --no-default-features
+              args: --lib --features array-vec,stream,serde --no-default-features
 
     gat:
         name: Test on Rust ${{ matrix.rust }} (with GAT enabled)
@@ -144,4 +144,4 @@ jobs:
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: test
-              args: --lib --features array-vec,stream,serde-derive,async --no-default-features
+              args: --lib --features array-vec,stream,serde,async,gat --no-default-features

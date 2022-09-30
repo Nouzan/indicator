@@ -125,7 +125,7 @@ where
     pub fn as_view<'a>(&'a self) -> View<'a, dyn Queue<Item = Q::Item> + 'a> {
         View {
             queue: &self.0,
-            change: self.1.as_ref(),
+            change: &self.1,
         }
     }
 
@@ -162,7 +162,7 @@ where
 /// A view of the tumbling queue.
 pub struct View<'a, Q: Queue + ?Sized> {
     queue: &'a Q,
-    change: Change<&'a Q::Item>,
+    change: &'a Change<Q::Item>,
 }
 
 impl<'a, Q: Queue + ?Sized> Clone for View<'a, Q> {
@@ -180,7 +180,7 @@ impl<'a, Q: Queue + ?Sized> View<'a, Q> {
     /// Change.
     #[inline]
     pub fn change(&self) -> Change<&Q::Item> {
-        self.change
+        self.change.as_ref()
     }
 }
 
@@ -303,11 +303,19 @@ where
 pub struct QueueMut<'a, T>(ViewMut<'a, dyn Queue<Item = T> + 'a>);
 
 impl<'a, T> QueueMut<'a, T> {
-    /// As [`QueueRef`]
+    /// As a [`QueueRef`]
     pub fn as_queue_ref(&self) -> QueueRef<T> {
         QueueRef(View {
             queue: self.queue,
-            change: self.change.as_ref(),
+            change: self.change,
+        })
+    }
+
+    /// Convert into a [`QueueRef`]
+    pub fn into_queue_ref(self) -> QueueRef<'a, T> {
+        QueueRef(View {
+            queue: self.0.queue,
+            change: self.0.change,
         })
     }
 }

@@ -1,3 +1,5 @@
+use core::ops::Deref;
+
 use super::tick::Tick;
 use super::tickable::Tickable;
 use time::OffsetDateTime;
@@ -67,5 +69,13 @@ where
         } else {
             write!(f, "(*, {})", self.value)
         }
+    }
+}
+
+impl<T> Deref for TickValue<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
     }
 }

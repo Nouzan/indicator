@@ -1,9 +1,14 @@
-use crate::{prelude::GatOperator, Period, Tick, Tickable, TumblingWindow};
+use core::num::NonZeroUsize;
+
+use crate::{prelude::GatOperator, Period, Tick, TickValue, Tickable, TumblingWindow};
 
 use super::{
     operator::{Operation, TumblingOperator},
     queue::{circular::Circular, Collection, Queue, QueueMut, QueueRef},
 };
+
+/// Ticked [`QueueRef`]
+pub type TickQueueRef<'a, T> = TickValue<QueueRef<'a, T>>;
 
 /// Periodic Operation.
 pub trait PeriodicOp<I, T> {
@@ -68,15 +73,19 @@ where
     I: Tickable,
     P: PeriodicOp<I, T>,
 {
-    fn step(&mut self, mut queue: QueueMut<T>, event: I) {
+    type Output<'out> = TickQueueRef<'out, T> where T: 'out;
+
+    fn step<'a>(&mut self, mut queue: QueueMut<'a, T>, event: I) -> Self::Output<'a> {
+        let tick = event.tick();
         if self.period.same_window(&self.last, &event.tick()) {
             let output = self.op.swap(queue.as_queue_ref(), event);
             queue.swap(output);
         } else {
-            self.last = event.tick();
             let output = self.op.push(queue.as_queue_ref(), event);
             queue.push(output);
         }
+        self.last = tick;
+        tick.with_value(queue.into_queue_ref())
     }
 }
 
@@ -86,22 +95,24 @@ where
     T: Clone,
     P: PeriodicOp<I, T>,
 {
-    fn step(&mut self, mut queue: QueueMut<T>, event: I) {
+    type Output<'out> = TickQueueRef<'out, T> where T: 'out;
+
+    fn step<'a>(&mut self, mut queue: QueueMut<'a, T>, event: I) -> Self::Output<'a> {
+        let tick = event.tick();
         if self.period.same_window(&self.last, &event.tick()) {
             let output = self.op.swap(queue.as_queue_ref(), event);
             queue.swap(output);
+        } else if let Some(last) = queue.get(0).cloned() {
+            queue.push(last);
+            let mut output = self.op.push(queue.as_queue_ref(), event);
+            let last = queue.get_mut(0).unwrap();
+            core::mem::swap(last, &mut output);
         } else {
-            self.last = event.tick();
-            if let Some(last) = queue.get(0).cloned() {
-                queue.push(last);
-                let mut output = self.op.push(queue.as_queue_ref(), event);
-                let last = queue.get_mut(0).unwrap();
-                core::mem::swap(last, &mut output);
-            } else {
-                let output = self.op.push(queue.as_queue_ref(), event);
-                queue.push(output);
-            }
+            let output = self.op.push(queue.as_queue_ref(), event);
+            queue.push(output);
         }
+        self.last = tick;
+        tick.with_value(queue.into_queue_ref())
     }
 }
 
@@ -162,7 +173,7 @@ where
     /// Build a cache operator.
     pub fn build_cache(
         self,
-    ) -> impl for<'out> GatOperator<Q::Item, Output<'out> = QueueRef<'out, Q::Item>>
+    ) -> impl for<'out> GatOperator<Q::Item, Output<'out> = TickQueueRef<'out, Q::Item>>
     where
         Q: Queue + 'static,
         Q::Item: Tickable + 'static,
@@ -190,12 +201,17 @@ where
 
 impl Periodic<(), false> {
     /// Create a new periodic operator builder using circular queue.
-    pub fn with_circular<T>(length: usize, period: Period) -> Periodic<Circular<T, 0>, false> {
-        Periodic::new(Circular::with_capacity(length), period)
+    pub fn with_circular<T>(
+        length: NonZeroUsize,
+        period: Period,
+    ) -> Periodic<Circular<0, T>, false> {
+        Periodic::new(Circular::with_capacity(length.get()), period)
     }
 
     /// Create a new periodic operator builder using circular queue.
-    pub fn with_circular_n<const N: usize, T>(period: Period) -> Periodic<Circular<T, N>, false> {
+    /// # Panic
+    /// Panic if `N` is zero.
+    pub fn with_circular_n<const N: usize, T>(period: Period) -> Periodic<Circular<N, T>, false> {
         Periodic::new(Circular::with_capacity(N), period)
     }
 }

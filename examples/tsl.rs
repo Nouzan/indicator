@@ -12,7 +12,7 @@ fn tsl(
 
     let high = {
         let mut high = Decimal::ZERO;
-        map(queue_ref(move |w: QueueRef<TickValue<_>>| {
+        map(queue_ref(move |w: TickQueueRef<TickValue<_>>| {
             if w.change().is_new_period() {
                 high = w[0].value;
             } else {
@@ -24,7 +24,7 @@ fn tsl(
 
     let low = {
         let mut low = Decimal::ZERO;
-        map(queue_ref(move |w: QueueRef<TickValue<Decimal>>| {
+        map(queue_ref(move |w: TickQueueRef<TickValue<Decimal>>| {
             if w.change().is_new_period() {
                 low = w[0].value;
             } else {
@@ -34,9 +34,9 @@ fn tsl(
         }))
     };
 
-    let cache0 = map(queue_ref(|w: QueueRef<TickValue<Decimal>>| w[0]));
+    let cache0 = map(queue_ref(|w: TickQueueRef<TickValue<Decimal>>| w[0]));
 
-    let cache1 = map(queue_ref(|w: QueueRef<TickValue<Decimal>>| {
+    let cache1 = map(queue_ref(|w: TickQueueRef<TickValue<Decimal>>| {
         let close1 = w.get(1).map(|t| t.value);
         w[0].tick.with_value(close1)
     }));
@@ -68,7 +68,7 @@ fn tsl(
         })
     })
     .then(rma)
-    .map(queue_ref(|w: QueueRef<TickValue<Decimal>>| w[0]));
+    .map(queue_ref(|w: TickQueueRef<TickValue<Decimal>>| w[0]));
 
     // long = true if last >= tsl[1] && !long[1]
     //        false if last <= tsl[1] && long[1]
@@ -101,7 +101,7 @@ fn tsl(
                 x.map(|(_, _, down)| (down, true))
             }
         })
-        .map(queue_ref(|w: QueueRef<TickValue<(Decimal, bool)>>| {
+        .map(queue_ref(|w: TickQueueRef<TickValue<(Decimal, bool)>>| {
             w[0].map(|v| v.0)
         }));
 

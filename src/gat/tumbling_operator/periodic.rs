@@ -1,11 +1,14 @@
 use core::num::NonZeroUsize;
 
-use crate::{prelude::GatOperator, Period, Tick, Tickable, TumblingWindow};
+use crate::{prelude::GatOperator, Period, Tick, TickValue, Tickable, TumblingWindow};
 
 use super::{
     operator::{Operation, TumblingOperator},
     queue::{circular::Circular, Collection, Queue, QueueMut, QueueRef},
 };
+
+/// Ticked [`QueueRef`]
+pub type TickQueueRef<'a, T> = TickValue<QueueRef<'a, T>>;
 
 /// Periodic Operation.
 pub trait PeriodicOp<I, T> {
@@ -70,7 +73,7 @@ where
     I: Tickable,
     P: PeriodicOp<I, T>,
 {
-    type Output<'out> = QueueRef<'out, T> where T: 'out;
+    type Output<'out> = TickQueueRef<'out, T> where T: 'out;
 
     fn step<'a>(&mut self, mut queue: QueueMut<'a, T>, event: I) -> Self::Output<'a> {
         let tick = event.tick();
@@ -82,7 +85,7 @@ where
             queue.push(output);
         }
         self.last = tick;
-        queue.into_queue_ref()
+        tick.with_value(queue.into_queue_ref())
     }
 }
 
@@ -92,7 +95,7 @@ where
     T: Clone,
     P: PeriodicOp<I, T>,
 {
-    type Output<'out> = QueueRef<'out, T> where T: 'out;
+    type Output<'out> = TickQueueRef<'out, T> where T: 'out;
 
     fn step<'a>(&mut self, mut queue: QueueMut<'a, T>, event: I) -> Self::Output<'a> {
         let tick = event.tick();
@@ -109,7 +112,7 @@ where
             queue.push(output);
         }
         self.last = tick;
-        queue.into_queue_ref()
+        tick.with_value(queue.into_queue_ref())
     }
 }
 
@@ -170,7 +173,7 @@ where
     /// Build a cache operator.
     pub fn build_cache(
         self,
-    ) -> impl for<'out> GatOperator<Q::Item, Output<'out> = QueueRef<'out, Q::Item>>
+    ) -> impl for<'out> GatOperator<Q::Item, Output<'out> = TickQueueRef<'out, Q::Item>>
     where
         Q: Queue + 'static,
         Q::Item: Tickable + 'static,

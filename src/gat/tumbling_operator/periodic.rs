@@ -70,15 +70,19 @@ where
     I: Tickable,
     P: PeriodicOp<I, T>,
 {
-    fn step(&mut self, mut queue: QueueMut<T>, event: I) {
+    type Output<'out> = QueueRef<'out, T> where T: 'out;
+
+    fn step<'a>(&mut self, mut queue: QueueMut<'a, T>, event: I) -> Self::Output<'a> {
+        let tick = event.tick();
         if self.period.same_window(&self.last, &event.tick()) {
             let output = self.op.swap(queue.as_queue_ref(), event);
             queue.swap(output);
         } else {
-            self.last = event.tick();
             let output = self.op.push(queue.as_queue_ref(), event);
             queue.push(output);
         }
+        self.last = tick;
+        queue.into_queue_ref()
     }
 }
 
@@ -88,22 +92,24 @@ where
     T: Clone,
     P: PeriodicOp<I, T>,
 {
-    fn step(&mut self, mut queue: QueueMut<T>, event: I) {
+    type Output<'out> = QueueRef<'out, T> where T: 'out;
+
+    fn step<'a>(&mut self, mut queue: QueueMut<'a, T>, event: I) -> Self::Output<'a> {
+        let tick = event.tick();
         if self.period.same_window(&self.last, &event.tick()) {
             let output = self.op.swap(queue.as_queue_ref(), event);
             queue.swap(output);
+        } else if let Some(last) = queue.get(0).cloned() {
+            queue.push(last);
+            let mut output = self.op.push(queue.as_queue_ref(), event);
+            let last = queue.get_mut(0).unwrap();
+            core::mem::swap(last, &mut output);
         } else {
-            self.last = event.tick();
-            if let Some(last) = queue.get(0).cloned() {
-                queue.push(last);
-                let mut output = self.op.push(queue.as_queue_ref(), event);
-                let last = queue.get_mut(0).unwrap();
-                core::mem::swap(last, &mut output);
-            } else {
-                let output = self.op.push(queue.as_queue_ref(), event);
-                queue.push(output);
-            }
+            let output = self.op.push(queue.as_queue_ref(), event);
+            queue.push(output);
         }
+        self.last = tick;
+        queue.into_queue_ref()
     }
 }
 

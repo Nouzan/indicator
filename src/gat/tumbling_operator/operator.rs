@@ -2,18 +2,25 @@ use core::num::NonZeroUsize;
 
 use crate::gat::GatOperator;
 
-use super::queue::{circular::Circular, Collection, Queue, QueueMut, QueueRef, Tumbling};
+use super::queue::{circular::Circular, Collection, Queue, QueueMut, Tumbling};
 
 /// Operation.
 pub trait Operation<I, T> {
+    /// Output.
+    type Output<'out>
+    where
+        T: 'out;
+
     /// Step.
-    fn step(&mut self, w: QueueMut<T>, x: I);
+    fn step<'a>(&mut self, w: QueueMut<'a, T>, x: I) -> Self::Output<'a>;
 }
 
 impl<I, T, F> Operation<I, T> for F
 where
     F: for<'a> FnMut(QueueMut<'a, T>, I),
 {
+    type Output<'out> = () where T: 'out;
+
     #[inline]
     fn step(&mut self, w: QueueMut<T>, x: I) {
         (self)(w, x)
@@ -45,7 +52,7 @@ where
     Q: Queue,
     P: Operation<I, Q::Item>,
 {
-    type Output<'out> = QueueRef<'out, Q::Item>
+    type Output<'out> = P::Output<'out>
     where
         Self: 'out,
         I: 'out;
@@ -55,8 +62,7 @@ where
         I: 'out,
     {
         let Self { queue, op } = self;
-        op.step(queue.as_queue_mut(), input);
-        queue.as_queue_ref()
+        op.step(queue.as_queue_mut(), input)
     }
 }
 

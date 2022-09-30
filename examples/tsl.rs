@@ -51,22 +51,22 @@ fn tsl(
                 .with_value((Decimal::ONE - alpha) * x.value + alpha * rma1)
         });
 
-    let atr = map(
-        |(((_close0, close1), high), low): (
-            ((TickValue<Decimal>, TickValue<Option<Decimal>>), Decimal),
-            Decimal,
-        )| {
-            close1.map(|close1| {
-                close1
-                    .map(|close1| {
-                        (high - low)
-                            .max((close1 - high).abs())
-                            .max((close1 - low).abs())
-                    })
-                    .unwrap_or_default()
-            })
-        },
-    )
+    type AtrCtx = (
+        ((TickValue<Decimal>, TickValue<Option<Decimal>>), Decimal),
+        Decimal,
+    );
+
+    let atr = map(|(((_close0, close1), high), low): AtrCtx| {
+        close1.map(|close1| {
+            close1
+                .map(|close1| {
+                    (high - low)
+                        .max((close1 - high).abs())
+                        .max((close1 - low).abs())
+                })
+                .unwrap_or_default()
+        })
+    })
     .then(rma)
     .map(queue_ref(|w: QueueRef<TickValue<Decimal>>| w[0]));
 

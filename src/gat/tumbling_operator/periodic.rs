@@ -1,3 +1,5 @@
+use core::num::NonZeroUsize;
+
 use crate::{prelude::GatOperator, Period, Tick, Tickable, TumblingWindow};
 
 use super::{
@@ -190,12 +192,17 @@ where
 
 impl Periodic<(), false> {
     /// Create a new periodic operator builder using circular queue.
-    pub fn with_circular<T>(length: usize, period: Period) -> Periodic<Circular<T, 0>, false> {
-        Periodic::new(Circular::with_capacity(length), period)
+    pub fn with_circular<T>(
+        length: NonZeroUsize,
+        period: Period,
+    ) -> Periodic<Circular<0, T>, false> {
+        Periodic::new(Circular::with_capacity(length.get()), period)
     }
 
     /// Create a new periodic operator builder using circular queue.
-    pub fn with_circular_n<const N: usize, T>(period: Period) -> Periodic<Circular<T, N>, false> {
+    /// # Panic
+    /// Panic if `N` is zero.
+    pub fn with_circular_n<const N: usize, T>(period: Period) -> Periodic<Circular<N, T>, false> {
         Periodic::new(Circular::with_capacity(N), period)
     }
 }

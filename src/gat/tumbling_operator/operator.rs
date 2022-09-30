@@ -1,3 +1,5 @@
+use core::num::NonZeroUsize;
+
 use crate::gat::GatOperator;
 
 use super::queue::{circular::Circular, Collection, Queue, QueueMut, QueueRef, Tumbling};
@@ -60,11 +62,11 @@ where
 
 /// Create a new tumbling operator with circular queue.
 pub fn tumbling<const N: usize, I, T, P>(
-    length: usize,
+    length: NonZeroUsize,
     op: P,
-) -> TumblingOperator<Circular<T, N>, P>
+) -> TumblingOperator<Circular<N, T>, P>
 where
     P: for<'a> FnMut(QueueMut<'a, T>, I),
 {
-    TumblingOperator::with_queue(Circular::with_capacity(length), op)
+    TumblingOperator::with_queue(Circular::with_capacity(length.get()), op)
 }

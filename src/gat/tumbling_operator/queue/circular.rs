@@ -16,14 +16,14 @@ use super::{Collection, Queue};
 
 /// Circular Queue backed by [`TinyVec`].
 #[derive(Debug, Clone)]
-pub struct Circular<T, const N: usize = 1> {
+pub struct Circular<const N: usize, T> {
     inner: TinyVec<[Option<T>; N]>,
     cap: usize,
     next_tail: usize,
     head: Option<usize>,
 }
 
-impl<T, const N: usize> Circular<T, N> {
+impl<T, const N: usize> Circular<N, T> {
     fn entry_next_tail(&mut self) -> &mut Option<T> {
         // Assumption: `next_tail` must be a valid position, that is
         // 1) `0 <= next_tail < cap`,
@@ -64,7 +64,10 @@ impl<T, const N: usize> Circular<T, N> {
     }
 }
 
-impl<T, const N: usize> Collection for Circular<T, N> {
+impl<T, const N: usize> Collection for Circular<N, T> {
+    /// Create a circular queue with the given capacity.
+    /// # Panic
+    /// Panic if `cap` is zero.
     fn with_capacity(cap: usize) -> Self {
         assert!(cap != 0, "capacity cannot be zero");
         Self {
@@ -76,7 +79,7 @@ impl<T, const N: usize> Collection for Circular<T, N> {
     }
 }
 
-impl<T, const N: usize> Queue for Circular<T, N> {
+impl<T, const N: usize> Queue for Circular<N, T> {
     type Item = T;
 
     fn enque(&mut self, item: Self::Item) {
@@ -131,7 +134,7 @@ mod tests {
 
     #[test]
     fn basic() {
-        let mut queue = Circular::<_, 3>::with_capacity(3);
+        let mut queue = Circular::<3, _>::with_capacity(3);
         assert!(queue.inner.is_inline());
         assert!(queue.is_empty());
         queue.enque(1);
@@ -145,7 +148,7 @@ mod tests {
 
     #[test]
     fn full() {
-        let mut queue = Circular::<_, 1>::with_capacity(3);
+        let mut queue = Circular::<1, _>::with_capacity(3);
         assert!(queue.inner.is_heap());
         queue.enque(1);
         queue.enque(2);
@@ -160,7 +163,7 @@ mod tests {
 
     #[test]
     fn circular_1() {
-        let mut queue = Circular::<_, 1>::with_capacity(3);
+        let mut queue = Circular::<1, _>::with_capacity(3);
         queue.enque(1);
         assert_eq!(queue.deque(), Some(1));
         queue.enque(2);
@@ -179,7 +182,7 @@ mod tests {
 
     #[test]
     fn circular_2() {
-        let mut queue = Circular::<_, 1>::with_capacity(3);
+        let mut queue = Circular::<1, _>::with_capacity(3);
         queue.enque(1);
         assert_eq!(queue.deque(), Some(1));
         queue.enque(2);

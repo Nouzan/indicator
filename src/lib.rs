@@ -73,6 +73,9 @@ pub mod ticked;
 /// Iterator extension trait.
 pub mod iter;
 
+/// Operator using GAT.
+pub mod gat;
+
 #[cfg(feature = "stream")]
 /// Stream extension trait.
 pub mod stream;
@@ -85,8 +88,9 @@ pub mod rayon;
 #[cfg(feature = "async")]
 pub mod async_operator;
 
-/// Operator using GAT.
-pub mod gat;
+/// Reactive streams pattern.
+#[cfg(feature = "reactive")]
+pub mod reactive;
 
 /// Prelude.
 pub mod prelude {

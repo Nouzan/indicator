@@ -17,6 +17,7 @@ array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
 serde = ["dep:serde", "time/serde-human-readable", "time/serde-well-known", "humantime"]
 async = ["futures", "pin-project-lite"]
+reactive = ["stream"]
 
 # features that need `std`
 std = ["time/std", "futures/std"]

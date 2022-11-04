@@ -11,12 +11,16 @@ rust-version = "1.65.0"
 
 [features]
 default = ["std", "stream", "array-vec"]
-std = ["time/std", "futures/std"]
+
+# features that don't need `std`
 array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
 serde = ["dep:serde", "time/serde-human-readable", "time/serde-well-known", "humantime"]
-parallel = ["rayon", "std"]
 async = ["futures", "pin-project-lite"]
+
+# features that need `std`
+std = ["time/std", "futures/std"]
+parallel = ["rayon", "std"]
 tower = ["std", "async", "tower-service"]
 
 [dependencies.arrayvec]

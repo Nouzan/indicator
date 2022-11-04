@@ -86,16 +86,13 @@ pub mod rayon;
 pub mod async_operator;
 
 /// Operator using GAT.
-#[cfg(feature = "gat")]
 pub mod gat;
 
 /// Prelude.
 pub mod prelude {
+    pub use crate::gat::*;
     pub use crate::operator::{BoxOperator, LocalBoxOperator, Operator, OperatorExt};
     pub use crate::window::{Period, Tick, TickValue, TumblingWindow};
-
-    #[cfg(feature = "gat")]
-    pub use crate::gat::*;
 }
 
 pub use iter::IndicatorIteratorExt;

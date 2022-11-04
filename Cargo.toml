@@ -1,13 +1,13 @@
 [package]
 name = "indicator"
-version = "0.4.0-alpha.0"
+version = "0.4.0-nightly"
 edition = "2021"
 authors = ["Nouzan <clobraindie@outlook.com>"]
 license = "MIT"
 description = "Abstractions for stream aggregation, we call them `Indicator` s."
 repository = "https://github.com/Nouzan/indicator"
 keywords = ["stream", "no_std", "stream-processing", "aggregation"]
-rust-version = "1.61.0"
+rust-version = "1.65.0"
 
 [features]
 default = ["std", "stream", "array-vec"]
@@ -19,8 +19,6 @@ parallel = ["rayon", "std"]
 async = ["futures", "pin-project-lite"]
 tower = ["std", "async", "tower-service"]
 
-gat = ["tinyvec"]
-
 [dependencies.arrayvec]
 version = "0.7"
 optional = true
@@ -29,7 +27,6 @@ default-features = false
 [dependencies.tinyvec]
  version = "1.6.0"
  features = ["alloc", "rustc_1_55"]
- optional = true
 
 [dependencies.time]
 version = "0.3"

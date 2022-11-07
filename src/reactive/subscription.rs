@@ -1,14 +1,9 @@
 use core::num::NonZeroUsize;
 
-use futures::{Sink, TryStream};
-
 /// Subscription.
-pub trait Subscription:
-    Sink<NonZeroUsize, Error = Self::Err> + TryStream<Ok = Self::Output, Error = Self::Err>
-{
-    /// Output.
-    type Output;
-
-    /// Error.
-    type Err;
+pub trait Subscription {
+    /// Request for some inputs.
+    fn request(&mut self, num: NonZeroUsize);
+    /// Cancel the stream.
+    fn cancel(&mut self);
 }

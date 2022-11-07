@@ -1,6 +1,9 @@
 use super::subscriber::Subscriber;
 use core::future::Future;
 
+#[cfg(feature = "stream-publisher")]
+pub use stream::stream;
+
 /// Publisher implementation for streams.
 #[cfg(feature = "stream-publisher")]
 pub mod stream;

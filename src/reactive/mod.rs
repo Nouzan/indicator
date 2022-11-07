@@ -6,3 +6,6 @@ pub mod subscriber;
 
 /// Subscription.
 pub mod subscription;
+
+/// Error.
+pub mod error;

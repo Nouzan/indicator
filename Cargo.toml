@@ -17,12 +17,18 @@ array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
 serde = ["dep:serde", "time/serde-human-readable", "time/serde-well-known", "humantime"]
 async = ["futures", "pin-project-lite"]
-reactive = ["stream", "thiserror"]
+reactive = []
 
 # features that need `std`
-std = ["time/std", "futures/std"]
-parallel = ["rayon", "std"]
+std = ["time/std", "futures/std", "thiserror"]
+parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
+stream-publisher = [
+    "std",
+    "reactive",
+    "stream",
+    "tokio/sync",
+]
 
 [dependencies.arrayvec]
 version = "0.7"
@@ -65,6 +71,11 @@ optional = true
 
 [dependencies.thiserror]
 version = "1.0.37"
+optional = true
+
+[dependencies.tokio]
+version = "1.21.2"
+default-features = false
 optional = true
 
 [dev-dependencies]

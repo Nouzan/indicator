@@ -7,6 +7,9 @@ pub mod subscriber;
 /// Subscription.
 pub mod subscription;
 
+/// Processor.
+pub mod processor;
+
 /// Error.
 pub mod error;
 

@@ -20,13 +20,19 @@ async = ["futures", "pin-project-lite"]
 reactive = []
 
 # features that need `std`
-std = ["time/std", "futures/std", "thiserror"]
+std = ["time/std", "futures?/std", "thiserror"]
 parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
 stream-publisher = [
     "std",
     "reactive",
     "stream",
+    "tokio/sync",
+    "tokio/macros",
+]
+operator-processor = [
+    "std",
+    "reactive",
     "tokio/sync",
     "tokio/macros",
 ]

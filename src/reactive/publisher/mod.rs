@@ -1,5 +1,4 @@
 use super::subscriber::Subscriber;
-use core::future::Future;
 
 #[cfg(feature = "stream-publisher")]
 pub use stream::stream;
@@ -9,17 +8,12 @@ pub use stream::stream;
 pub mod stream;
 
 /// Publisher.
-pub trait Publisher {
+pub trait Publisher<'a> {
     /// Output.
     type Output;
 
-    /// Task.
-    type Task<'a>: Future<Output = ()> + 'a
-    where
-        Self: 'a;
-
     /// Subscribe.
-    fn subscribe<'a, S>(self, subscriber: S) -> Self::Task<'a>
+    fn subscribe<S>(&mut self, subscriber: S)
     where
         S: Subscriber<Self::Output> + 'a;
 }

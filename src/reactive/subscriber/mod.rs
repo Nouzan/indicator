@@ -1,4 +1,4 @@
-use super::{error::StreamError, subscription::Subscription};
+use super::{error::StreamError, subscription::BoxSubscription};
 
 pub use self::unbounded::unbounded;
 
@@ -8,15 +8,11 @@ pub mod unbounded;
 /// Subscriber.
 pub trait Subscriber<I>: Send {
     /// Callback on subscribed.
-    fn on_subscribe<S>(&mut self, subscription: S)
-    where
-        S: Subscription;
+    fn on_subscribe(&mut self, subscription: BoxSubscription);
     /// Callback on receiving the next input.
     fn on_next(&mut self, input: I);
     /// Callback on error.
-    fn on_error<E>(self, error: E)
-    where
-        E: Into<StreamError>;
+    fn on_error(&mut self, error: StreamError);
     /// Calllback on complete.
-    fn on_complete(self);
+    fn on_complete(&mut self);
 }

@@ -1,4 +1,4 @@
-use core::num::NonZeroUsize;
+use core::{future::IntoFuture, num::NonZeroUsize};
 use futures::{future::BoxFuture, FutureExt, Stream, TryStreamExt};
 use std::sync::Arc;
 use tokio::sync::{oneshot, Semaphore};
@@ -6,8 +6,8 @@ use tokio::sync::{oneshot, Semaphore};
 use crate::reactive::{Publisher, StreamError, Subscriber, Subscription};
 
 /// Publisher drived by a stream.
-#[derive(Debug, Clone, Copy)]
-pub struct StreamPublisher<St> {
+pub struct StreamPublisher<'a, St, T> {
+    subscriber: Option<Box<dyn Subscriber<T> + 'a>>,
     stream: St,
 }
 
@@ -38,7 +38,7 @@ impl Subscription for StreamSubscription {
 
 async fn process<'a, T, E>(
     stream: impl Stream<Item = Result<T, E>>,
-    subscriber: &mut impl Subscriber<T>,
+    subscriber: &mut Box<dyn Subscriber<T> + 'a>,
     err_tx: oneshot::Sender<StreamError>,
 ) -> Result<(), StreamError>
 where
@@ -51,7 +51,7 @@ where
         err_tx: Some(err_tx),
         cancel_rx,
     };
-    subscriber.on_subscribe(subscription);
+    subscriber.on_subscribe(subscription.boxed());
     futures::pin_mut!(stream);
     let mut unbounded = false;
     while let Some(item) = stream.try_next().await? {
@@ -74,23 +74,31 @@ where
     Ok(())
 }
 
-impl<St, T, E> Publisher for StreamPublisher<St>
+impl<'a, St, T, E> IntoFuture for StreamPublisher<'a, St, T>
 where
-    St: Stream<Item = Result<T, E>> + Send,
-    T: Send,
-    E: Send,
+    T: Send + 'a,
+    E: Send + 'a,
+    St: Stream<Item = Result<T, E>> + Send + 'a,
     StreamError: From<E>,
 {
-    type Output = T;
-    type Task<'a> = BoxFuture<'a, ()> where St: 'a;
+    type Output = ();
 
-    fn subscribe<'a, S>(self, mut subscriber: S) -> Self::Task<'a>
-    where
-        St: 'a,
-        S: Subscriber<Self::Output> + 'a,
-    {
-        let stream = self.stream;
-        async move {
+    type IntoFuture = BoxFuture<'a, ()>;
+
+    fn into_future(self) -> Self::IntoFuture {
+        self.run().boxed()
+    }
+}
+
+impl<'a, St, T, E> StreamPublisher<'a, St, T>
+where
+    St: Stream<Item = Result<T, E>>,
+    StreamError: From<E>,
+{
+    /// Run the publisher.
+    pub async fn run(self) {
+        let Self { subscriber, stream } = self;
+        if let Some(mut subscriber) = subscriber {
             let (err_tx, err_rx) = oneshot::channel();
             tokio::select! {
                 res = err_rx => {
@@ -107,19 +115,38 @@ where
                 }
             }
         }
-        .boxed()
+    }
+}
+
+impl<'a, St, T, E> Publisher<'a> for StreamPublisher<'a, St, T>
+where
+    St: Stream<Item = Result<T, E>> + Send + 'a,
+    T: Send,
+    E: Send,
+    StreamError: From<E>,
+{
+    type Output = T;
+
+    fn subscribe<S>(&mut self, subscriber: S)
+    where
+        S: Subscriber<Self::Output> + 'a,
+    {
+        self.subscriber = Some(Box::new(subscriber));
     }
 }
 
 /// Create a publisher from a stream.
-pub fn stream<T, E, St>(stream: St) -> StreamPublisher<St>
+pub fn stream<'a, T, E, St>(stream: St) -> StreamPublisher<'a, St, T>
 where
     St: Stream<Item = Result<T, E>> + Send,
     T: Send,
     E: Send,
     StreamError: From<E>,
 {
-    StreamPublisher { stream }
+    StreamPublisher {
+        stream,
+        subscriber: None,
+    }
 }
 
 #[cfg(test)]
@@ -131,12 +158,26 @@ mod tests {
 
     #[tokio::test]
     async fn test_stream_publisher() -> anyhow::Result<()> {
-        let publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
-        publisher
-            .subscribe(unbounded(|res| {
-                println!("{res:?}");
-            }))
-            .await;
+        let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
+        publisher.subscribe(unbounded(|res| {
+            println!("{res:?}");
+        }));
+        publisher.await;
+        Ok(())
+    }
+
+    #[cfg(feature = "operator-processor")]
+    #[tokio::test]
+    async fn test_with_operator_processor() -> anyhow::Result<()> {
+        use crate::{map, reactive::processor::operator::OperatorProcessor};
+
+        let mut op = OperatorProcessor::new(map(|x| x + 1));
+        op.subscribe(unbounded(|res| {
+            println!("{res:?}");
+        }));
+        let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
+        publisher.subscribe(op);
+        publisher.await;
         Ok(())
     }
 }

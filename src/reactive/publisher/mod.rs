@@ -21,5 +21,5 @@ pub trait Publisher {
     /// Subscribe.
     fn subscribe<'a, S>(self, subscriber: S) -> Self::Task<'a>
     where
-        S: Subscriber<'a, Self::Output> + 'a;
+        S: Subscriber<Self::Output> + 'a;
 }

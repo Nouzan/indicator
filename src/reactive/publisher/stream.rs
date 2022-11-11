@@ -38,7 +38,7 @@ impl Subscription for StreamSubscription {
 
 async fn process<'a, T, E>(
     stream: impl Stream<Item = Result<T, E>>,
-    subscriber: &mut impl Subscriber<'a, T>,
+    subscriber: &mut impl Subscriber<T>,
     err_tx: oneshot::Sender<StreamError>,
 ) -> Result<(), StreamError>
 where
@@ -87,7 +87,7 @@ where
     fn subscribe<'a, S>(self, mut subscriber: S) -> Self::Task<'a>
     where
         St: 'a,
-        S: Subscriber<'a, Self::Output> + 'a,
+        S: Subscriber<Self::Output> + 'a,
     {
         let stream = self.stream;
         async move {

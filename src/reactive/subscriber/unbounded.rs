@@ -3,15 +3,15 @@ use crate::reactive::{StreamError, Subscription};
 use super::Subscriber;
 
 /// A unbounded subscriber.
-pub struct Unbounded<'a, F>(F, Option<Box<dyn Subscription + Send + 'a>>);
+pub struct Unbounded<F>(F, Option<Box<dyn Subscription + Send>>);
 
-impl<'a, I, F> Subscriber<'a, I> for Unbounded<'a, F>
+impl<I, F> Subscriber<I> for Unbounded<F>
 where
     F: FnMut(Result<I, StreamError>) + Send,
 {
     fn on_subscribe<S>(&mut self, mut subscription: S)
     where
-        S: Subscription + 'a,
+        S: Subscription,
     {
         subscription.unbounded();
         self.1 = Some(Box::new(subscription));
@@ -32,7 +32,7 @@ where
 }
 
 /// Create a unbounded subscriber.
-pub fn unbounded<'a, I, F>(f: F) -> Unbounded<'a, F>
+pub fn unbounded<I, F>(f: F) -> Unbounded<F>
 where
     F: FnMut(Result<I, StreamError>) + Send,
 {

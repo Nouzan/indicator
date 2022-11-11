@@ -28,6 +28,7 @@ stream-publisher = [
     "reactive",
     "stream",
     "tokio/sync",
+    "tokio/macros",
 ]
 
 [dependencies.arrayvec]

@@ -6,11 +6,11 @@ pub use self::unbounded::unbounded;
 pub mod unbounded;
 
 /// Subscriber.
-pub trait Subscriber<'a, I>: Send {
+pub trait Subscriber<I>: Send {
     /// Callback on subscribed.
     fn on_subscribe<S>(&mut self, subscription: S)
     where
-        S: Subscription + 'a;
+        S: Subscription;
     /// Callback on receiving the next input.
     fn on_next(&mut self, input: I);
     /// Callback on error.

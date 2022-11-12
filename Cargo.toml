@@ -17,7 +17,6 @@ array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
 serde = ["dep:serde", "time/serde-human-readable", "time/serde-well-known", "humantime"]
 async = ["futures", "pin-project-lite"]
-reactive = []
 
 # features that need `std`
 std = [
@@ -28,6 +27,7 @@ std = [
 ]
 parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
+reactive = ["std"]
 stream-publisher = [
     "std",
     "reactive",
@@ -40,6 +40,7 @@ operator-processor = [
 ]
 task-subscriber = [
     "std",
+    "futures",
     "reactive",
     "tokio/rt",
     "tokio/sync",
@@ -109,3 +110,4 @@ arrayvec = "0.7"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1"
 serde_json = "1"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }

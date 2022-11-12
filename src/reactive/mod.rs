@@ -17,6 +17,6 @@ pub use self::{
     error::StreamError,
     processor::Processor,
     publisher::{Publisher, PublisherExt},
-    subscriber::Subscriber,
+    subscriber::{Complete, Subscriber},
     subscription::{BoxSubscription, Subscription},
 };

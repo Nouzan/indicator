@@ -1,4 +1,5 @@
 use super::{error::StreamError, subscription::BoxSubscription};
+use core::{future::Future, pin::Pin};
 
 pub use self::unbounded::unbounded;
 
@@ -12,6 +13,9 @@ pub mod unbounded;
 #[cfg(feature = "task-subscriber")]
 pub mod task;
 
+/// Complete.
+pub type Complete<'a> = Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
+
 /// Subscriber.
 pub trait Subscriber<I>: Send {
     /// Callback on subscribed.
@@ -19,7 +23,7 @@ pub trait Subscriber<I>: Send {
     /// Callback on receiving the next input.
     fn on_next(&mut self, input: I);
     /// Callback on error.
-    fn on_error(&mut self, error: StreamError);
+    fn on_error(&mut self, error: StreamError) -> Complete<'_>;
     /// Calllback on complete.
-    fn on_complete(&mut self);
+    fn on_complete(&mut self) -> Complete<'_>;
 }

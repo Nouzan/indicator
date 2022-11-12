@@ -106,14 +106,14 @@ where
             tokio::select! {
                 res = err_rx => {
                     match res {
-                        Ok(err) => subscriber.on_error(err),
-                        Err(_) => subscriber.on_complete(),
+                        Ok(err) => subscriber.on_error(err).await,
+                        Err(_) => subscriber.on_complete().await,
                     }
                 }
                 res = process(stream, &mut subscriber, err_tx) => {
                     match res {
-                        Ok(()) => subscriber.on_complete(),
-                        Err(err) => subscriber.on_error(err),
+                        Ok(()) => subscriber.on_complete().await,
+                        Err(err) => subscriber.on_error(err).await,
                     }
                 }
             }
@@ -158,6 +158,15 @@ mod tests {
 
     use super::*;
     use futures::stream::iter;
+    use tracing::subscriber::DefaultGuard;
+    use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
+
+    fn init_tracing() -> DefaultGuard {
+        Registry::default()
+            .with(fmt::layer())
+            .with(EnvFilter::from_default_env())
+            .set_default()
+    }
 
     #[tokio::test]
     async fn test_stream_publisher() -> anyhow::Result<()> {
@@ -197,6 +206,7 @@ mod tests {
             reactive::{processor::OperatorProcessor, subscriber::subscriber_fn, PublisherExt},
         };
 
+        let _guard = init_tracing();
         let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4), Ok(5), Ok(6)]));
         let op1 = OperatorProcessor::new(map(|x| x + 1));
         let op2 = OperatorProcessor::new(map(|x| x * x));
@@ -218,7 +228,6 @@ mod tests {
                 }
             }));
         publisher.await;
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         Ok(())
     }
 }

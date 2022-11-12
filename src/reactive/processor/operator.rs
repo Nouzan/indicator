@@ -1,7 +1,7 @@
-use core::marker::PhantomData;
+use core::{future::ready, marker::PhantomData};
 
 use crate::{
-    reactive::{subscription::BoxSubscription, Publisher, StreamError, Subscriber},
+    reactive::{subscription::BoxSubscription, Complete, Publisher, StreamError, Subscriber},
     Operator,
 };
 
@@ -42,15 +42,19 @@ where
         }
     }
 
-    fn on_error(&mut self, error: StreamError) {
+    fn on_error(&mut self, error: StreamError) -> Complete<'_> {
         if let Some(subscriber) = self.subscriber.as_mut() {
-            subscriber.on_error(error);
+            subscriber.on_error(error)
+        } else {
+            Box::pin(ready(()))
         }
     }
 
-    fn on_complete(&mut self) {
+    fn on_complete(&mut self) -> Complete<'_> {
         if let Some(subscriber) = self.subscriber.as_mut() {
-            subscriber.on_complete();
+            subscriber.on_complete()
+        } else {
+            Box::pin(ready(()))
         }
     }
 }

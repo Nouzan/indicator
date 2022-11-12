@@ -59,7 +59,10 @@ where
             subscriber.on_next(item);
         } else {
             match semaphore.acquire().await {
-                Ok(_permit) => subscriber.on_next(item),
+                Ok(permit) => {
+                    permit.forget();
+                    subscriber.on_next(item)
+                }
                 Err(_) => {
                     if cancel_tx.is_closed() {
                         break;
@@ -181,6 +184,41 @@ mod tests {
             println!("{res:?}");
         }));
         publisher.await;
+        Ok(())
+    }
+
+    #[cfg(all(feature = "operator-processor", feature = "task-subscriber"))]
+    #[tokio::test]
+    async fn test_with_task_subscriber() -> anyhow::Result<()> {
+        use core::future::ready;
+
+        use crate::{
+            map,
+            reactive::{processor::OperatorProcessor, subscriber::subscriber_fn, PublisherExt},
+        };
+
+        let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4), Ok(5), Ok(6)]));
+        let op1 = OperatorProcessor::new(map(|x| x + 1));
+        let op2 = OperatorProcessor::new(map(|x| x * x));
+        let mut count = 0;
+        publisher
+            .with(op1)
+            .with(op2)
+            .subscribe(subscriber_fn(move |data| {
+                if count >= 4 {
+                    ready(false).left_future()
+                } else {
+                    count += 1;
+                    async move {
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                        println!("count={count}, data={data:?}");
+                        count < 4
+                    }
+                    .right_future()
+                }
+            }));
+        publisher.await;
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         Ok(())
     }
 }

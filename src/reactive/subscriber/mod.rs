@@ -2,8 +2,15 @@ use super::{error::StreamError, subscription::BoxSubscription};
 
 pub use self::unbounded::unbounded;
 
+#[cfg(feature = "task-subscriber")]
+pub use self::task::subscriber_fn;
+
 /// Unbounded Subscriber.
 pub mod unbounded;
+
+/// Task subscriber.
+#[cfg(feature = "task-subscriber")]
+pub mod task;
 
 /// Subscriber.
 pub trait Subscriber<I>: Send {

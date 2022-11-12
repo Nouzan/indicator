@@ -20,7 +20,12 @@ async = ["futures", "pin-project-lite"]
 reactive = []
 
 # features that need `std`
-std = ["time/std", "futures?/std", "thiserror"]
+std = [
+    "time/std",
+    "futures?/std",
+    "thiserror",
+    "tracing?/std",
+]
 parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
 stream-publisher = [
@@ -31,10 +36,15 @@ stream-publisher = [
     "tokio/macros",
 ]
 operator-processor = [
+    "reactive",
+]
+task-subscriber = [
     "std",
     "reactive",
+    "tokio/rt",
     "tokio/sync",
     "tokio/macros",
+    "tracing",
 ]
 
 [dependencies.arrayvec]
@@ -84,6 +94,12 @@ optional = true
 version = "1.21.2"
 default-features = false
 optional = true
+
+[dependencies.tracing]
+version = "0.1.37"
+default-features = false
+optional = true
+
 
 [dev-dependencies]
 time = { version = "0.3", default-features = false, features = ["macros"] }

@@ -18,5 +18,5 @@ pub use self::{
     processor::Processor,
     publisher::{Publisher, PublisherExt},
     subscriber::Subscriber,
-    subscription::Subscription,
+    subscription::{BoxSubscription, Subscription},
 };

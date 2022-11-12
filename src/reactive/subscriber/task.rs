@@ -1,9 +1,10 @@
 use core::future::IntoFuture;
+use futures::FutureExt;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::reactive::{BoxSubscription, StreamError};
 
-use super::Subscriber;
+use super::{Complete, Subscriber};
 
 /// Create a [`Subscriber`] from the given function.
 pub fn subscriber_fn<T, F, Fut>(f: F) -> Task<T, F>
@@ -17,6 +18,7 @@ where
         next: Some(f),
         tx: None,
         cancel_rx: None,
+        handle: None,
     }
 }
 
@@ -26,6 +28,7 @@ pub struct Task<T, F> {
     next: Option<F>,
     tx: Option<mpsc::UnboundedSender<Result<T, StreamError>>>,
     cancel_rx: Option<oneshot::Receiver<()>>,
+    handle: Option<tokio::task::JoinHandle<()>>,
 }
 
 impl<T, F, Fut> Subscriber<T> for Task<T, F>
@@ -55,16 +58,17 @@ where
                     }
                 }
             };
-            tokio::spawn(async move {
+            let handle = tokio::spawn(async move {
                 tokio::select! {
                     _ = run => {
-                    println!("subscription cancelled");
+                    tracing::trace!("subscription cancelled");
                     },
                     _ = cancel_tx.closed() => {
-                    println!("subscription completed");
+                    tracing::trace!("subscription completed");
                     }
                 }
             });
+            self.handle = Some(handle);
         }
     }
 
@@ -74,18 +78,32 @@ where
         }
     }
 
-    fn on_error(&mut self, error: StreamError) {
-        let (Some(tx), Some(mut rx)) = (self.tx.take(), self.cancel_rx.take()) else {
-	    panic!("`tx` and `cancel_rx` must exist here");
+    fn on_error(&mut self, error: StreamError) -> Complete<'_> {
+        let (Some(tx), Some(mut rx), Some(handle)) = (self.tx.take(), self.cancel_rx.take(), self.handle.take()) else {
+	    panic!("they all must exist here");
 	};
         _ = tx.send(Err(error));
         rx.close();
+        handle
+            .map(|res| {
+                if let Err(err) = res {
+                    tracing::error!(%err, "task error");
+                }
+            })
+            .boxed()
     }
 
-    fn on_complete(&mut self) {
-        let (Some(_tx), Some(mut rx)) = (self.tx.take(), self.cancel_rx.take()) else {
-	    panic!("`tx` and `cancel_rx` must exist here");
+    fn on_complete(&mut self) -> Complete<'_> {
+        let (Some(_tx), Some(mut rx), Some(handle)) = (self.tx.take(), self.cancel_rx.take(), self.handle.take()) else {
+	    panic!("they all must exist here");
 	};
         rx.close();
+        handle
+            .map(|res| {
+                if let Err(err) = res {
+                    tracing::error!(%err, "task error");
+                }
+            })
+            .boxed()
     }
 }

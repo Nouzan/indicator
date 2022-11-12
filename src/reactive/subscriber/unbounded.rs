@@ -1,6 +1,8 @@
+use core::future::ready;
+
 use crate::reactive::{subscription::BoxSubscription, StreamError};
 
-use super::Subscriber;
+use super::{Complete, Subscriber};
 
 /// A unbounded subscriber.
 pub struct Unbounded<F>(F, Option<BoxSubscription>);
@@ -18,11 +20,14 @@ where
         (self.0)(Ok(input));
     }
 
-    fn on_error(&mut self, error: StreamError) {
-        (self.0)(Err(error))
+    fn on_error(&mut self, error: StreamError) -> Complete<'_> {
+        (self.0)(Err(error));
+        Box::pin(ready(()))
     }
 
-    fn on_complete(&mut self) {}
+    fn on_complete(&mut self) -> Complete<'_> {
+        Box::pin(ready(()))
+    }
 }
 
 /// Create a unbounded subscriber.

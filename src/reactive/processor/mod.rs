@@ -4,7 +4,10 @@ use super::{Publisher, Subscriber};
 #[cfg(feature = "operator-processor")]
 pub mod operator;
 
-/// Processor.
-pub trait Processor<'a, I, O>: Subscriber<I> + Publisher<'a, Output = O> {}
+#[cfg(feature = "operator-processor")]
+pub use self::operator::OperatorProcessor;
 
-impl<'a, I, O, P> Processor<'a, I, O> for P where P: Subscriber<I> + Publisher<'a, Output = O> {}
+/// Processor.
+pub trait Processor<'a, I>: Subscriber<I> + Publisher<'a> {}
+
+impl<'a, I, P> Processor<'a, I> for P where P: Subscriber<I> + Publisher<'a> {}

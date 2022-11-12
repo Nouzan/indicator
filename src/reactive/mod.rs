@@ -14,5 +14,9 @@ pub mod processor;
 pub mod error;
 
 pub use self::{
-    error::StreamError, publisher::Publisher, subscriber::Subscriber, subscription::Subscription,
+    error::StreamError,
+    processor::Processor,
+    publisher::{Publisher, PublisherExt},
+    subscriber::Subscriber,
+    subscription::Subscription,
 };

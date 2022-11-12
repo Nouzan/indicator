@@ -169,14 +169,17 @@ mod tests {
     #[cfg(feature = "operator-processor")]
     #[tokio::test]
     async fn test_with_operator_processor() -> anyhow::Result<()> {
-        use crate::{map, reactive::processor::operator::OperatorProcessor};
+        use crate::{
+            map,
+            reactive::{processor::OperatorProcessor, PublisherExt},
+        };
 
-        let mut op = OperatorProcessor::new(map(|x| x + 1));
-        op.subscribe(unbounded(|res| {
+        let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
+        let op = OperatorProcessor::new(map(|x| x + 1));
+        let mut processed = publisher.with(op);
+        processed.subscribe(unbounded(|res| {
             println!("{res:?}");
         }));
-        let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
-        publisher.subscribe(op);
         publisher.await;
         Ok(())
     }

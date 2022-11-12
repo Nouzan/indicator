@@ -175,9 +175,9 @@ mod tests {
         };
 
         let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
-        let op = OperatorProcessor::new(map(|x| x + 1));
-        let mut processed = publisher.with(op);
-        processed.subscribe(unbounded(|res| {
+        let op1 = OperatorProcessor::new(map(|x| x + 1));
+        let op2 = OperatorProcessor::new(map(|x| x * x));
+        publisher.with(op1).with(op2).subscribe(unbounded(|res| {
             println!("{res:?}");
         }));
         publisher.await;

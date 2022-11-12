@@ -1,6 +1,6 @@
 use core::{future::IntoFuture, num::NonZeroUsize};
 use futures::{future::BoxFuture, FutureExt, Stream, TryStreamExt};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use tokio::sync::{oneshot, Semaphore};
 
 use crate::reactive::{Publisher, StreamError, Subscriber, Subscription};
@@ -13,25 +13,30 @@ pub struct StreamPublisher<'a, St, T> {
 
 struct StreamSubscription {
     semaphore: Arc<Semaphore>,
-    err_tx: Option<oneshot::Sender<StreamError>>,
+    err_tx: RwLock<Option<oneshot::Sender<StreamError>>>,
     #[allow(dead_code)]
     cancel_rx: oneshot::Receiver<()>,
 }
 
 impl Subscription for StreamSubscription {
-    fn request(&mut self, num: NonZeroUsize) {
+    fn request(&self, num: NonZeroUsize) {
+        if self.err_tx.read().expect("lock `err_tx` error").is_none() {
+            return;
+        }
         if self.semaphore.available_permits() + num.get() > usize::MAX >> 3 {
-            self.err_tx
+            _ = self
+                .err_tx
+                .write()
+                .expect("lock `err_tx` error")
                 .take()
                 .expect("`err_tx` must exist")
-                .send(StreamError::abort("too many permits"))
-                .expect("`err_tx` send must success");
+                .send(StreamError::abort("too many permits"));
         } else {
             self.semaphore.add_permits(num.get());
         }
     }
 
-    fn unbounded(&mut self) {
+    fn unbounded(&self) {
         self.semaphore.close();
     }
 }
@@ -48,7 +53,7 @@ where
     let (cancel_tx, cancel_rx) = oneshot::channel();
     let subscription = StreamSubscription {
         semaphore: semaphore.clone(),
-        err_tx: Some(err_tx),
+        err_tx: RwLock::new(Some(err_tx)),
         cancel_rx,
     };
     subscriber.on_subscribe(subscription.boxed());

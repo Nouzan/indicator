@@ -11,7 +11,7 @@ impl<I, F> Subscriber<I> for Unbounded<F>
 where
     F: FnMut(Result<I, StreamError>) + Send,
 {
-    fn on_subscribe(&mut self, mut subscription: BoxSubscription) {
+    fn on_subscribe(&mut self, subscription: BoxSubscription) {
         subscription.unbounded();
         self.1 = Some(subscription);
     }

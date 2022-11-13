@@ -131,10 +131,11 @@ mod tests {
 
     use super::*;
     use futures::{sink::unfold, stream::iter};
-    use tracing::{metadata::LevelFilter, subscriber::DefaultGuard};
-    use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
-    fn init_tracing() -> DefaultGuard {
+    #[cfg(feature = "std")]
+    fn init_tracing() -> tracing::subscriber::DefaultGuard {
+        use tracing::metadata::LevelFilter;
+        use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
         Registry::default()
             .with(fmt::layer().with_line_number(true))
             .with(
@@ -146,22 +147,25 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_stream_publisher() -> anyhow::Result<()> {
+    async fn test_stream_publisher() {
+        #[cfg(feature = "std")]
         let _guard = init_tracing();
         let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
-        publisher.subscribe(unbounded(|res| {
-            tracing::info!("{res:?}");
-        }))?;
-        publisher.await?;
-        Ok(())
+        publisher
+            .subscribe(unbounded(|res| {
+                tracing::info!("{res:?}");
+            }))
+            .unwrap();
+        publisher.await.unwrap();
     }
 
     #[tokio::test]
-    async fn test_with_operator_processor() -> anyhow::Result<()> {
+    async fn test_with_operator_processor() {
         use crate::{
             map,
             reactive::{processor::OperatorProcessor, PublisherExt},
         };
+        #[cfg(feature = "std")]
         let _guard = init_tracing();
         let mut publisher = stream(iter([
             Ok(1),
@@ -171,21 +175,25 @@ mod tests {
         ]));
         let op1 = OperatorProcessor::new(map(|x| x + 1));
         let op2 = OperatorProcessor::new(map(|x| x * x));
-        publisher.with(op1).with(op2).subscribe(unbounded(|res| {
-            tracing::info!("{res:?}");
-        }))?;
-        publisher.await?;
-        Ok(())
+        publisher
+            .with(op1)
+            .with(op2)
+            .subscribe(unbounded(|res| {
+                tracing::info!("{res:?}");
+            }))
+            .unwrap();
+        publisher.await.unwrap();
     }
 
     #[tokio::test]
-    async fn test_with_unfold() -> anyhow::Result<()> {
+    async fn test_with_unfold() {
         use crate::{
             map,
             reactive::{
                 processor::OperatorProcessor, subscriber::sink_with_shutdown, PublisherExt,
             },
         };
+        #[cfg(feature = "std")]
         let _guard = init_tracing();
         let mut publisher = stream(iter([
             Ok(1),
@@ -197,18 +205,21 @@ mod tests {
         ]));
         let op1 = OperatorProcessor::new(map(|x| x + 1));
         let op2 = OperatorProcessor::new(map(|x| x * x));
-        publisher.with(op1).with(op2).subscribe(sink_with_shutdown(
-            unfold(0, |mut acc, item| async move {
-                acc += item;
-                tracing::info!("{acc}");
-                Ok(acc)
-            }),
-            |res| {
-                tracing::info!("{res:?}");
-                Ok(())
-            },
-        ))?;
-        publisher.await?;
-        Ok(())
+        publisher
+            .with(op1)
+            .with(op2)
+            .subscribe(sink_with_shutdown(
+                unfold(0, |mut acc, item| async move {
+                    acc += item;
+                    tracing::info!("{acc}");
+                    Ok(acc)
+                }),
+                |res| {
+                    tracing::info!("{res:?}");
+                    Ok(())
+                },
+            ))
+            .unwrap();
+        publisher.await.unwrap();
     }
 }

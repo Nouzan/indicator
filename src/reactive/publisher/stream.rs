@@ -34,7 +34,7 @@ where
     St: TryStream<Ok = T, Error = E>,
     StreamError: From<E>,
 {
-    type Output = ();
+    type Output = Result<(), StreamError>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         use State::*;
@@ -52,8 +52,8 @@ where
                 Feeding => {
                     *state = Feeding;
                     if buffered.is_some() {
-                        let cancel = !ready!(s.as_mut().poll_ready(cx));
-                        s.as_mut().start_send(buffered.take().unwrap());
+                        let cancel = !ready!(s.as_mut().poll_ready(cx))?;
+                        s.as_mut().start_send(buffered.take().unwrap())?;
                         if cancel {
                             *state = Complete(Err(StreamError::abort("cancelled")));
                         }
@@ -69,7 +69,7 @@ where
                             *state = Complete(Ok(()));
                         }
                         Poll::Pending => {
-                            if !ready!(s.as_mut().poll_flush()) {
+                            if !ready!(s.as_mut().poll_flush())? {
                                 *state = Complete(Err(StreamError::abort("cancelled")));
                             } else {
                                 return Poll::Pending;
@@ -78,12 +78,12 @@ where
                     }
                 }
                 Complete(reason) => {
-                    s.as_mut().closing(reason);
+                    s.as_mut().closing(reason)?;
                 }
                 Closing => {
-                    ready!(s.as_mut().poll_close(cx));
+                    ready!(s.as_mut().poll_close(cx))?;
                     *subscriber = None;
-                    return Poll::Ready(());
+                    return Poll::Ready(Ok(()));
                 }
             }
         }
@@ -144,7 +144,7 @@ mod tests {
         publisher.subscribe(unbounded(|res| {
             println!("{res:?}");
         }));
-        publisher.await;
+        publisher.await?;
         Ok(())
     }
 

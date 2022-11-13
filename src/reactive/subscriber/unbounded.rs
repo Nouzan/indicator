@@ -20,26 +20,28 @@ impl<I, F> Subscriber<I> for Unbounded<F>
 where
     F: FnMut(Result<I, StreamError>),
 {
-    fn poll_ready(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<bool> {
-        Poll::Ready(true)
+    fn poll_ready(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<bool, StreamError>> {
+        Poll::Ready(Ok(true))
     }
 
-    fn start_send(self: Pin<&mut Self>, item: I) {
+    fn start_send(self: Pin<&mut Self>, item: I) -> Result<(), StreamError> {
         (self.project().f)(Ok(item));
+        Ok(())
     }
 
-    fn closing(self: Pin<&mut Self>, reason: Result<(), StreamError>) {
+    fn closing(self: Pin<&mut Self>, reason: Result<(), StreamError>) -> Result<(), StreamError> {
         if let Err(err) = reason {
             (self.project().f)(Err(err));
         }
+        Ok(())
     }
 
-    fn poll_close(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<()> {
-        Poll::Ready(())
+    fn poll_close(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<(), StreamError>> {
+        Poll::Ready(Ok(()))
     }
 
-    fn poll_flush(self: Pin<&mut Self>) -> Poll<bool> {
-        Poll::Ready(true)
+    fn poll_flush(self: Pin<&mut Self>) -> Poll<Result<bool, StreamError>> {
+        Poll::Ready(Ok(true))
     }
 }
 

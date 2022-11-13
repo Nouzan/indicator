@@ -1,11 +1,11 @@
 use super::{Publisher, Subscriber};
 
-// /// Operator Processor.
-// #[cfg(feature = "operator-processor")]
-// pub mod operator;
+/// Operator Processor.
+#[cfg(feature = "operator-processor")]
+pub mod operator;
 
-// #[cfg(feature = "operator-processor")]
-// pub use self::operator::OperatorProcessor;
+#[cfg(feature = "operator-processor")]
+pub use self::operator::OperatorProcessor;
 
 /// Processor.
 pub trait Processor<'a, I>: Subscriber<I> + Publisher<'a> {}

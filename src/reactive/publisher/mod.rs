@@ -1,16 +1,16 @@
-// use self::processed::Processed;
+use self::processed::Processed;
 
-use super::subscriber::Subscriber;
+use super::{subscriber::Subscriber, Processor};
 
-// #[cfg(feature = "stream-publisher")]
-// pub use stream::stream;
+#[cfg(feature = "stream-publisher")]
+pub use stream::stream;
 
 /// Publisher implementation for streams.
 #[cfg(feature = "stream-publisher")]
 pub mod stream;
 
-// /// Processed Publisher.
-// pub mod processed;
+/// Processed Publisher.
+pub mod processed;
 
 /// Publisher.
 pub trait Publisher<'a> {
@@ -37,15 +37,15 @@ where
     }
 }
 
-// /// Extension of [`Publisher`].
-// pub trait PublisherExt<'a>: Publisher<'a> {
-//     /// Combine with a processor.
-//     fn with<P>(&mut self, processor: P) -> Processed<'_, Self, P>
-//     where
-//         P: Processor<'a, Self::Output> + 'a,
-//     {
-//         Processed::new(self, processor)
-//     }
-// }
+/// Extension of [`Publisher`].
+pub trait PublisherExt<'a>: Publisher<'a> {
+    /// Combine with a processor.
+    fn with<P>(&mut self, processor: P) -> Processed<'_, Self, P>
+    where
+        P: Processor<'a, Self::Output> + 'a,
+    {
+        Processed::new(self, processor)
+    }
+}
 
-// impl<'a, P> PublisherExt<'a> for P where P: Publisher<'a> {}
+impl<'a, P> PublisherExt<'a> for P where P: Publisher<'a> {}

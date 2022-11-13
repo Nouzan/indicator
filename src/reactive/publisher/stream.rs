@@ -131,13 +131,17 @@ mod tests {
 
     use super::*;
     use futures::{sink::unfold, stream::iter};
-    use tracing::subscriber::DefaultGuard;
+    use tracing::{metadata::LevelFilter, subscriber::DefaultGuard};
     use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
     fn init_tracing() -> DefaultGuard {
         Registry::default()
-            .with(fmt::layer())
-            .with(EnvFilter::from_default_env())
+            .with(fmt::layer().with_line_number(true))
+            .with(
+                EnvFilter::builder()
+                    .with_default_directive(LevelFilter::INFO.into())
+                    .from_env_lossy(),
+            )
             .set_default()
     }
 
@@ -146,7 +150,7 @@ mod tests {
         let _guard = init_tracing();
         let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
         publisher.subscribe(unbounded(|res| {
-            println!("{res:?}");
+            tracing::info!("{res:?}");
         }))?;
         publisher.await?;
         Ok(())
@@ -168,7 +172,7 @@ mod tests {
         let op1 = OperatorProcessor::new(map(|x| x + 1));
         let op2 = OperatorProcessor::new(map(|x| x * x));
         publisher.with(op1).with(op2).subscribe(unbounded(|res| {
-            println!("{res:?}");
+            tracing::info!("{res:?}");
         }))?;
         publisher.await?;
         Ok(())
@@ -196,11 +200,11 @@ mod tests {
         publisher.with(op1).with(op2).subscribe(sink_with_shutdown(
             unfold(0, |mut acc, item| async move {
                 acc += item;
-                println!("{acc}");
+                tracing::info!("{acc}");
                 Ok(acc)
             }),
             |res| {
-                println!("{res:?}");
+                tracing::info!("{res:?}");
                 Ok(())
             },
         ))?;

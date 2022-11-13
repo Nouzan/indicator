@@ -22,6 +22,7 @@ reactive = [
     "alloc",
     "futures",
     "pin-project-lite",
+    "tracing",
 ]
 
 # features that need `std`

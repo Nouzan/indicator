@@ -71,8 +71,9 @@ where
                         Poll::Pending => {
                             if !ready!(s.as_mut().poll_flush()) {
                                 *state = Complete(Err(StreamError::abort("cancelled")));
+                            } else {
+                                return Poll::Pending;
                             }
-                            return Poll::Pending;
                         }
                     }
                 }

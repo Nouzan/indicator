@@ -58,7 +58,6 @@ where
                             *state = Complete(Err(StreamError::abort("cancelled")));
                         }
                     }
-
                     match stream.as_mut().try_poll_next(cx) {
                         Poll::Ready(Some(Ok(item))) => {
                             *buffered = Some(item);

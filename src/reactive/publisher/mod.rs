@@ -1,6 +1,6 @@
 // use self::processed::Processed;
 
-use super::{processor::Processor, subscriber::Subscriber};
+use super::{subscriber::Subscriber};
 
 // #[cfg(feature = "stream-publisher")]
 // pub use stream::stream;

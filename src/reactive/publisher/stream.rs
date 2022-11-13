@@ -1,3 +1,4 @@
+use alloc::boxed::Box;
 use core::{
     future::Future,
     pin::Pin,
@@ -48,7 +49,7 @@ where
         let s = subscriber.as_mut().expect("publisher has finished");
 
         loop {
-            match std::mem::take(state) {
+            match core::mem::take(state) {
                 Feeding => {
                     *state = Feeding;
                     if buffered.is_some() {

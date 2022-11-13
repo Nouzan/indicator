@@ -1,3 +1,5 @@
+use alloc::string::{String, ToString};
+
 #[cfg(feature = "std")]
 use thiserror::Error;
 

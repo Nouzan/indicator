@@ -13,13 +13,20 @@ rust-version = "1.65.0"
 default = ["std", "stream", "array-vec"]
 
 # features that don't need `std`
+alloc = ["futures?/alloc", "time/alloc"]
 array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
 serde = ["dep:serde", "time/serde-human-readable", "time/serde-well-known", "humantime"]
 async = ["futures", "pin-project-lite"]
+reactive = [
+    "alloc",
+    "futures",
+    "pin-project-lite",
+]
 
 # features that need `std`
 std = [
+    "alloc",
     "time/std",
     "futures?/std",
     "thiserror",
@@ -27,11 +34,6 @@ std = [
 ]
 parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
-reactive = [
-    "std",
-    "futures",
-    "pin-project-lite",
-]
 
 [dependencies.arrayvec]
 version = "0.7"

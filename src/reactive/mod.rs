@@ -4,9 +4,6 @@ pub mod publisher;
 /// Subscriber.
 pub mod subscriber;
 
-/// Subscription.
-pub mod subscription;
-
 /// Processor.
 pub mod processor;
 
@@ -18,5 +15,4 @@ pub use self::{
     processor::Processor,
     publisher::{Publisher, PublisherExt},
     subscriber::Subscriber,
-    subscription::{BoxSubscription, Subscription},
 };

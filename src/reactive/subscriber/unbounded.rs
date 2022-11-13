@@ -1,12 +1,11 @@
 use core::{
-    future::ready,
     pin::Pin,
     task::{Context, Poll},
 };
 
 use pin_project_lite::pin_project;
 
-use crate::reactive::{subscription::BoxSubscription, StreamError};
+use crate::reactive::{StreamError};
 
 use super::Subscriber;
 
@@ -35,7 +34,7 @@ where
         }
     }
 
-    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+    fn poll_close(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<()> {
         Poll::Ready(())
     }
 

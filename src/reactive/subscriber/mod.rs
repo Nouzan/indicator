@@ -1,6 +1,5 @@
-use super::{error::StreamError, subscription::BoxSubscription};
+use super::{error::StreamError};
 use core::{
-    future::Future,
     pin::Pin,
     task::{Context, Poll},
 };

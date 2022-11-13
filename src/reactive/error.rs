@@ -5,7 +5,7 @@ use thiserror::Error;
 #[derive(Debug)]
 #[cfg_attr(feature = "std", derive(Error))]
 pub enum StreamError {
-    /// Abort.
+    /// Abort or cancel.
     #[cfg_attr(feature = "std", error("abort: {0}"))]
     Abort(String),
 }

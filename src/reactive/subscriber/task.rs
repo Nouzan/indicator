@@ -1,10 +1,10 @@
-use core::future::IntoFuture;
+use core::{future::IntoFuture, pin::Pin, task::{Poll, Context}};
 use futures::FutureExt;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::reactive::{BoxSubscription, StreamError};
 
-use super::{Complete, Subscriber};
+use super::{Subscriber};
 
 /// Create a [`Subscriber`] from the given function.
 pub fn subscriber_fn<T, F, Fut>(f: F) -> Task<T, F>
@@ -105,5 +105,21 @@ where
                 }
             })
             .boxed()
+    }
+
+    fn poll_ready(self: Pin<&mut Self>, cx: Context<'_>) -> Poll<Result<(), StreamError>> {
+        todo!()
+    }
+
+    fn feed_next(self: Pin<&mut Self>, item: T) -> Result<(), StreamError> {
+        todo!()
+    }
+
+    fn poll_finish(
+        self: Pin<&mut Self>,
+        cx: Context<'_>,
+        reason: Result<(), StreamError>,
+    ) -> Poll<Result<(), StreamError>> {
+        todo!()
     }
 }

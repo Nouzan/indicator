@@ -89,7 +89,6 @@ version = "0.1.37"
 default-features = false
 optional = true
 
-
 [dev-dependencies]
 time = { version = "0.3", default-features = false, features = ["macros"] }
 rust_decimal = "1.17.0"

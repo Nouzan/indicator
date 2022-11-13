@@ -27,7 +27,11 @@ std = [
 ]
 parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
-reactive = ["std"]
+reactive = [
+    "std",
+    "futures",
+    "pin-project-lite",
+]
 stream-publisher = [
     "std",
     "reactive",
@@ -40,7 +44,6 @@ operator-processor = [
 ]
 task-subscriber = [
     "std",
-    "futures",
     "reactive",
     "tokio/rt",
     "tokio/sync",

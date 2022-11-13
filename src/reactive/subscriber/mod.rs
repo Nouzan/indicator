@@ -1,29 +1,32 @@
 use super::{error::StreamError, subscription::BoxSubscription};
-use core::{future::Future, pin::Pin};
+use core::{
+    future::Future,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 pub use self::unbounded::unbounded;
 
-#[cfg(feature = "task-subscriber")]
-pub use self::task::subscriber_fn;
+// #[cfg(feature = "task-subscriber")]
+// pub use self::task::subscriber_fn;
 
 /// Unbounded Subscriber.
 pub mod unbounded;
 
-/// Task subscriber.
-#[cfg(feature = "task-subscriber")]
-pub mod task;
-
-/// Complete.
-pub type Complete<'a> = Pin<Box<dyn Future<Output = ()> + Send + 'a>>;
+// /// Task subscriber.
+// #[cfg(feature = "task-subscriber")]
+// pub mod task;
 
 /// Subscriber.
-pub trait Subscriber<I>: Send {
-    /// Callback on subscribed.
-    fn on_subscribe(&mut self, subscription: BoxSubscription);
-    /// Callback on receiving the next input.
-    fn on_next(&mut self, input: I);
-    /// Callback on error.
-    fn on_error(&mut self, error: StreamError) -> Complete<'_>;
-    /// Calllback on complete.
-    fn on_complete(&mut self) -> Complete<'_>;
+pub trait Subscriber<I> {
+    /// Poll ready.
+    fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<bool>;
+    /// Feed next item.
+    fn start_send(self: Pin<&mut Self>, item: I);
+    /// Poll flush.
+    fn poll_flush(self: Pin<&mut Self>) -> Poll<bool>;
+    /// Closing.
+    fn closing(self: Pin<&mut Self>, reason: Result<(), StreamError>);
+    /// Poll close.
+    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()>;
 }

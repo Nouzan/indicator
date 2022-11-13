@@ -1,7 +1,7 @@
-use core::{future::ready, marker::PhantomData};
+use core::{future::ready, marker::PhantomData, pin::Pin, task::{Context, Poll}};
 
 use crate::{
-    reactive::{subscription::BoxSubscription, Complete, Publisher, StreamError, Subscriber},
+    reactive::{subscription::BoxSubscription, Publisher, StreamError, Subscriber},
     Operator,
 };
 
@@ -56,6 +56,22 @@ where
         } else {
             Box::pin(ready(()))
         }
+    }
+
+    fn poll_ready(self: Pin<&mut Self>, cx: Context<'_>) -> Poll<Result<(), StreamError>> {
+        todo!()
+    }
+
+    fn feed_next(self: Pin<&mut Self>, item: I) -> Result<(), StreamError> {
+        todo!()
+    }
+
+    fn poll_finish(
+        self: Pin<&mut Self>,
+        cx: Context<'_>,
+        reason: Result<(), StreamError>,
+    ) -> Poll<Result<(), StreamError>> {
+        todo!()
     }
 }
 

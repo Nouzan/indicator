@@ -92,10 +92,17 @@ where
 {
     type Output = O;
 
-    fn subscribe<S>(&mut self, subscriber: S)
+    fn subscribe<S>(&mut self, subscriber: S) -> Result<(), StreamError>
     where
         S: Subscriber<Self::Output> + 'a,
     {
-        self.subscriber = Some(Box::pin(subscriber));
+        if self.subscriber.is_some() {
+            Err(StreamError::abort(
+                "`OperatorProcessor` has been subscribed",
+            ))
+        } else {
+            self.subscriber = Some(Box::pin(subscriber));
+            Ok(())
+        }
     }
 }

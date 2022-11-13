@@ -1,6 +1,6 @@
 use self::processed::Processed;
 
-use super::{subscriber::Subscriber, Processor};
+use super::{subscriber::Subscriber, Processor, StreamError};
 
 pub use stream::stream;
 
@@ -16,7 +16,7 @@ pub trait Publisher<'a> {
     type Output;
 
     /// Subscribe.
-    fn subscribe<S>(&mut self, subscriber: S)
+    fn subscribe<S>(&mut self, subscriber: S) -> Result<(), StreamError>
     where
         S: Subscriber<Self::Output> + 'a;
 }
@@ -27,7 +27,7 @@ where
 {
     type Output = P::Output;
 
-    fn subscribe<S>(&mut self, subscriber: S)
+    fn subscribe<S>(&mut self, subscriber: S) -> Result<(), StreamError>
     where
         S: Subscriber<Self::Output> + 'a,
     {

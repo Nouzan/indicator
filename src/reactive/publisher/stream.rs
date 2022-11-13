@@ -108,9 +108,7 @@ where
 /// Create a publisher from a stream.
 pub fn stream<'a, T, E, St>(stream: St) -> StreamPublisher<'a, St, T>
 where
-    St: Stream<Item = Result<T, E>> + Send,
-    T: Send,
-    E: Send,
+    St: Stream<Item = Result<T, E>>,
     StreamError: From<E>,
 {
     StreamPublisher {
@@ -126,7 +124,7 @@ mod tests {
     use crate::reactive::subscriber::unbounded;
 
     use super::*;
-    use futures::stream::iter;
+    use futures::{sink::unfold, stream::iter};
     use tracing::subscriber::DefaultGuard;
     use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
@@ -148,7 +146,6 @@ mod tests {
         Ok(())
     }
 
-    #[cfg(feature = "operator-processor")]
     #[tokio::test]
     async fn test_with_operator_processor() -> anyhow::Result<()> {
         use crate::{
@@ -156,7 +153,12 @@ mod tests {
             reactive::{processor::OperatorProcessor, PublisherExt},
         };
         let _guard = init_tracing();
-        let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
+        let mut publisher = stream(iter([
+            Ok(1),
+            Ok(2),
+            Err(StreamError::unknown("error")),
+            Ok(4),
+        ]));
         let op1 = OperatorProcessor::new(map(|x| x + 1));
         let op2 = OperatorProcessor::new(map(|x| x * x));
         publisher.with(op1).with(op2).subscribe(unbounded(|res| {
@@ -166,38 +168,37 @@ mod tests {
         Ok(())
     }
 
-    // #[cfg(all(feature = "operator-processor", feature = "task-subscriber"))]
-    // #[tokio::test]
-    // async fn test_with_task_subscriber() -> anyhow::Result<()> {
-    //     use core::future::ready;
-
-    //     use crate::{
-    //         map,
-    //         reactive::{processor::OperatorProcessor, subscriber::subscriber_fn, PublisherExt},
-    //     };
-
-    //     let _guard = init_tracing();
-    //     let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4), Ok(5), Ok(6)]));
-    //     let op1 = OperatorProcessor::new(map(|x| x + 1));
-    //     let op2 = OperatorProcessor::new(map(|x| x * x));
-    //     let mut count = 0;
-    //     publisher
-    //         .with(op1)
-    //         .with(op2)
-    //         .subscribe(subscriber_fn(move |data| {
-    //             if count >= 4 {
-    //                 ready(false).left_future()
-    //             } else {
-    //                 count += 1;
-    //                 async move {
-    //                     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-    //                     println!("count={count}, data={data:?}");
-    //                     count < 4
-    //                 }
-    //                 .right_future()
-    //             }
-    //         }));
-    //     publisher.await;
-    //     Ok(())
-    // }
+    #[tokio::test]
+    async fn test_with_unfold() -> anyhow::Result<()> {
+        use crate::{
+            map,
+            reactive::{
+                processor::OperatorProcessor, subscriber::sink_with_shutdown, PublisherExt,
+            },
+        };
+        let _guard = init_tracing();
+        let mut publisher = stream(iter([
+            Ok(1),
+            Ok(2),
+            Ok(3),
+            Ok(4),
+            Err(StreamError::unknown("error")),
+            Ok(5),
+        ]));
+        let op1 = OperatorProcessor::new(map(|x| x + 1));
+        let op2 = OperatorProcessor::new(map(|x| x * x));
+        publisher.with(op1).with(op2).subscribe(sink_with_shutdown(
+            unfold(0, |mut acc, item| async move {
+                acc += item;
+                println!("{acc}");
+                Ok(acc)
+            }),
+            |res| {
+                println!("{res:?}");
+                Ok(())
+            },
+        ));
+        publisher.await?;
+        Ok(())
+    }
 }

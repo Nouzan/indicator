@@ -52,9 +52,9 @@ where
                 Feeding => {
                     *state = Feeding;
                     if buffered.is_some() {
-                        if ready!(s.as_mut().poll_ready(cx)) {
-                            s.as_mut().start_send(buffered.take().unwrap());
-                        } else {
+                        let cancel = !ready!(s.as_mut().poll_ready(cx));
+                        s.as_mut().start_send(buffered.take().unwrap());
+                        if cancel {
                             *state = Complete(Err(StreamError::abort("cancelled")));
                         }
                     }

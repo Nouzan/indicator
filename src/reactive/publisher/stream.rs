@@ -69,7 +69,7 @@ where
                             *state = Complete(Ok(()));
                         }
                         Poll::Pending => {
-                            if !ready!(s.as_mut().poll_flush())? {
+                            if !ready!(s.as_mut().poll_flush(cx))? {
                                 *state = Complete(Err(StreamError::abort("cancelled")));
                             } else {
                                 return Poll::Pending;
@@ -148,23 +148,23 @@ mod tests {
         Ok(())
     }
 
-    // #[cfg(feature = "operator-processor")]
-    // #[tokio::test]
-    // async fn test_with_operator_processor() -> anyhow::Result<()> {
-    //     use crate::{
-    //         map,
-    //         reactive::{processor::OperatorProcessor, PublisherExt},
-    //     };
-
-    //     let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
-    //     let op1 = OperatorProcessor::new(map(|x| x + 1));
-    //     let op2 = OperatorProcessor::new(map(|x| x * x));
-    //     publisher.with(op1).with(op2).subscribe(unbounded(|res| {
-    //         println!("{res:?}");
-    //     }));
-    //     publisher.await;
-    //     Ok(())
-    // }
+    #[cfg(feature = "operator-processor")]
+    #[tokio::test]
+    async fn test_with_operator_processor() -> anyhow::Result<()> {
+        use crate::{
+            map,
+            reactive::{processor::OperatorProcessor, PublisherExt},
+        };
+        let _guard = init_tracing();
+        let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
+        let op1 = OperatorProcessor::new(map(|x| x + 1));
+        let op2 = OperatorProcessor::new(map(|x| x * x));
+        publisher.with(op1).with(op2).subscribe(unbounded(|res| {
+            println!("{res:?}");
+        }));
+        publisher.await?;
+        Ok(())
+    }
 
     // #[cfg(all(feature = "operator-processor", feature = "task-subscriber"))]
     // #[tokio::test]

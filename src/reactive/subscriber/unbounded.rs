@@ -40,7 +40,7 @@ where
         Poll::Ready(Ok(()))
     }
 
-    fn poll_flush(self: Pin<&mut Self>) -> Poll<Result<bool, StreamError>> {
+    fn poll_flush(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<bool, StreamError>> {
         Poll::Ready(Ok(true))
     }
 }

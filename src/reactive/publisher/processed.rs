@@ -1,4 +1,4 @@
-use crate::reactive::{processor::Processor, StreamError, Subscriber};
+use crate::reactive::{processor::Processor, Subscriber};
 
 use super::Publisher;
 
@@ -29,15 +29,13 @@ where
 {
     type Output = U::Output;
 
-    fn subscribe<S>(&mut self, mut subscriber: S)
+    fn subscribe<S>(&mut self, subscriber: S)
     where
         S: Subscriber<Self::Output> + 'a,
     {
         if let Some(mut processor) = self.processor.take() {
             processor.subscribe(subscriber);
             self.publisher.subscribe(processor);
-        } else {
-            subscriber.on_error(StreamError::abort("`Processed` can only be subsribed once"));
         }
     }
 }

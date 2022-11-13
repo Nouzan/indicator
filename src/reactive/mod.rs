@@ -16,7 +16,7 @@ pub mod error;
 pub use self::{
     error::StreamError,
     processor::Processor,
-    publisher::Publisher,
+    publisher::{Publisher, PublisherExt},
     subscriber::Subscriber,
     subscription::{BoxSubscription, Subscription},
 };

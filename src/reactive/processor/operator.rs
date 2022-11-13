@@ -1,15 +1,23 @@
-use core::{future::ready, marker::PhantomData, pin::Pin, task::{Context, Poll}};
+use core::{
+    marker::PhantomData,
+    pin::Pin,
+    task::{Context, Poll},
+};
+
+use pin_project_lite::pin_project;
 
 use crate::{
-    reactive::{subscription::BoxSubscription, Publisher, StreamError, Subscriber},
+    reactive::{Publisher, StreamError, Subscriber},
     Operator,
 };
 
-/// Operator Processor.
-pub struct OperatorProcessor<'a, I, P, O> {
-    op: P,
-    subscriber: Option<Box<dyn Subscriber<O> + 'a>>,
-    _input: PhantomData<fn() -> I>,
+pin_project! {
+    /// Operator Processor.
+    pub struct OperatorProcessor<'a, I, P, O> {
+        op: P,
+        subscriber: Option<Pin<Box<dyn Subscriber<O> + 'a>>>,
+        _input: PhantomData<fn() -> I>,
+    }
 }
 
 impl<'a, I, P, O> OperatorProcessor<'a, I, P, O>
@@ -30,48 +38,50 @@ impl<'a, I, P, O> Subscriber<I> for OperatorProcessor<'a, I, P, O>
 where
     P: Operator<I, Output = O> + Send,
 {
-    fn on_subscribe(&mut self, subscription: BoxSubscription) {
-        if let Some(subscriber) = self.subscriber.as_mut() {
-            subscriber.on_subscribe(subscription);
-        }
+    fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<bool, StreamError>> {
+        self.project()
+            .subscriber
+            .as_mut()
+            .ok_or_else(|| StreamError::unknown("`OperatorProcessor` must subscribe first"))?
+            .as_mut()
+            .poll_ready(cx)
     }
 
-    fn on_next(&mut self, input: I) {
-        if let Some(subscriber) = self.subscriber.as_mut() {
-            subscriber.on_next(self.op.next(input));
-        }
+    fn start_send(self: Pin<&mut Self>, item: I) -> Result<(), StreamError> {
+        let this = self.project();
+        let next = this.op.next(item);
+        this.subscriber
+            .as_mut()
+            .ok_or_else(|| StreamError::unknown("`OperatorProcessor` must subscribe first"))?
+            .as_mut()
+            .start_send(next)
     }
 
-    fn on_error(&mut self, error: StreamError) -> Complete<'_> {
-        if let Some(subscriber) = self.subscriber.as_mut() {
-            subscriber.on_error(error)
-        } else {
-            Box::pin(ready(()))
-        }
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<bool, StreamError>> {
+        self.project()
+            .subscriber
+            .as_mut()
+            .ok_or_else(|| StreamError::unknown("`OperatorProcessor` must subscribe first"))?
+            .as_mut()
+            .poll_flush(cx)
     }
 
-    fn on_complete(&mut self) -> Complete<'_> {
-        if let Some(subscriber) = self.subscriber.as_mut() {
-            subscriber.on_complete()
-        } else {
-            Box::pin(ready(()))
-        }
+    fn closing(self: Pin<&mut Self>, reason: Result<(), StreamError>) -> Result<(), StreamError> {
+        self.project()
+            .subscriber
+            .as_mut()
+            .ok_or_else(|| StreamError::unknown("`OperatorProcessor` must subscribe first"))?
+            .as_mut()
+            .closing(reason)
     }
 
-    fn poll_ready(self: Pin<&mut Self>, cx: Context<'_>) -> Poll<Result<(), StreamError>> {
-        todo!()
-    }
-
-    fn feed_next(self: Pin<&mut Self>, item: I) -> Result<(), StreamError> {
-        todo!()
-    }
-
-    fn poll_finish(
-        self: Pin<&mut Self>,
-        cx: Context<'_>,
-        reason: Result<(), StreamError>,
-    ) -> Poll<Result<(), StreamError>> {
-        todo!()
+    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), StreamError>> {
+        self.project()
+            .subscriber
+            .as_mut()
+            .ok_or_else(|| StreamError::unknown("`OperatorProcessor` must subscribe first"))?
+            .as_mut()
+            .poll_close(cx)
     }
 }
 
@@ -85,6 +95,6 @@ where
     where
         S: Subscriber<Self::Output> + 'a,
     {
-        self.subscriber = Some(Box::new(subscriber));
+        self.subscriber = Some(Box::pin(subscriber));
     }
 }

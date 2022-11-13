@@ -81,4 +81,4 @@ jobs:
             if: ${{ !contains(github.event.head_commit.message, 'skip test') }}
             with:
               command: test
-              args: --lib --features array-vec,stream,serde,async --no-default-features
+              args: --lib --features array-vec,stream,serde,async,reactive --no-default-features

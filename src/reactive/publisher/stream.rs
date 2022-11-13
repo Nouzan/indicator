@@ -98,11 +98,16 @@ where
 {
     type Output = T;
 
-    fn subscribe<S>(&mut self, subscriber: S)
+    fn subscribe<S>(&mut self, subscriber: S) -> Result<(), StreamError>
     where
         S: Subscriber<Self::Output> + 'a,
     {
-        self.subscriber = Some(Box::pin(subscriber));
+        if self.subscriber.is_some() {
+            Err(StreamError::abort("`StreamPublisher` has been subscribed"))
+        } else {
+            self.subscriber = Some(Box::pin(subscriber));
+            Ok(())
+        }
     }
 }
 
@@ -142,7 +147,7 @@ mod tests {
         let mut publisher = stream(iter([Ok(1), Ok(2), Ok(3), Ok(4)]));
         publisher.subscribe(unbounded(|res| {
             println!("{res:?}");
-        }));
+        }))?;
         publisher.await?;
         Ok(())
     }
@@ -164,7 +169,7 @@ mod tests {
         let op2 = OperatorProcessor::new(map(|x| x * x));
         publisher.with(op1).with(op2).subscribe(unbounded(|res| {
             println!("{res:?}");
-        }));
+        }))?;
         publisher.await?;
         Ok(())
     }
@@ -198,7 +203,7 @@ mod tests {
                 println!("{res:?}");
                 Ok(())
             },
-        ));
+        ))?;
         publisher.await?;
         Ok(())
     }

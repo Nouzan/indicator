@@ -1,4 +1,4 @@
-use super::{error::StreamError};
+use super::error::StreamError;
 use core::{
     pin::Pin,
     task::{Context, Poll},

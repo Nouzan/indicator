@@ -5,7 +5,7 @@ use core::{
 
 use pin_project_lite::pin_project;
 
-use crate::reactive::{StreamError};
+use crate::reactive::StreamError;
 
 use super::Subscriber;
 

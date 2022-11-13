@@ -2,11 +2,9 @@ use self::processed::Processed;
 
 use super::{subscriber::Subscriber, Processor};
 
-#[cfg(feature = "stream-publisher")]
 pub use stream::stream;
 
 /// Publisher implementation for streams.
-#[cfg(feature = "stream-publisher")]
 pub mod stream;
 
 /// Processed Publisher.

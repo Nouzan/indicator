@@ -4,17 +4,13 @@ use core::{
     task::{Context, Poll},
 };
 
-pub use self::unbounded::unbounded;
-
-// #[cfg(feature = "task-subscriber")]
-// pub use self::task::subscriber_fn;
+pub use self::{sink::sink_with_shutdown, unbounded::unbounded};
 
 /// Unbounded Subscriber.
 pub mod unbounded;
 
-// /// Task subscriber.
-// #[cfg(feature = "task-subscriber")]
-// pub mod task;
+/// Sink Subscriber.
+pub mod sink;
 
 /// Subscriber.
 pub trait Subscriber<I> {

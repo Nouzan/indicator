@@ -1,6 +1,6 @@
 [package]
 name = "indicator"
-version = "0.4.0-nightly"
+version = "0.4.0-rc.1"
 edition = "2021"
 authors = ["Nouzan <clobraindie@outlook.com>"]
 license = "MIT"
@@ -78,11 +78,6 @@ optional = true
 [dependencies.thiserror]
 version = "1.0.37"
 optional = true
-
-# [dependencies.tokio]
-# version = "1.21.2"
-# default-features = false
-# optional = true
 
 [dependencies.tracing]
 version = "0.1.37"

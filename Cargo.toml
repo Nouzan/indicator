@@ -1,6 +1,6 @@
 [package]
 name = "indicator"
-version = "0.4.0-rc.1"
+version = "0.4.0-rc.2"
 edition = "2021"
 authors = ["Nouzan <clobraindie@outlook.com>"]
 license = "MIT"
@@ -8,6 +8,10 @@ description = "Abstractions for stream aggregation, we call them `Indicator` s."
 repository = "https://github.com/Nouzan/indicator"
 keywords = ["stream", "no_std", "stream-processing", "aggregation"]
 rust-version = "1.65.0"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 default = ["std", "stream", "array-vec"]

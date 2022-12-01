@@ -300,7 +300,7 @@ impl Period {
         } else {
             Self {
                 offset,
-                kind: PeriodKind::Duration(Duration::from_secs(seconds as u64)),
+                kind: PeriodKind::Duration(Duration::from_secs(seconds)),
             }
         }
     }
@@ -312,7 +312,7 @@ impl Period {
         } else {
             Self {
                 offset: UtcOffset::UTC,
-                kind: PeriodKind::Duration(Duration::from_secs(seconds as u64)),
+                kind: PeriodKind::Duration(Duration::from_secs(seconds)),
             }
         }
     }
@@ -472,7 +472,7 @@ mod tests {
     #[test]
     fn to_string() {
         let mode = Period::hours(offset!(+8), 2);
-        println!("{}", mode);
+        println!("{mode}");
     }
 
     #[cfg(feature = "serde")]

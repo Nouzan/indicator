@@ -61,6 +61,9 @@
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 /// Operator.
 pub mod operator;
 
@@ -72,6 +75,9 @@ pub mod ticked;
 
 /// Iterator extension trait.
 pub mod iter;
+
+/// Operator using GAT.
+pub mod gat;
 
 #[cfg(feature = "stream")]
 /// Stream extension trait.
@@ -85,17 +91,15 @@ pub mod rayon;
 #[cfg(feature = "async")]
 pub mod async_operator;
 
-/// Operator using GAT.
-#[cfg(feature = "gat")]
-pub mod gat;
+/// Reactive streams pattern.
+#[cfg(feature = "reactive")]
+pub mod reactive;
 
 /// Prelude.
 pub mod prelude {
+    pub use crate::gat::*;
     pub use crate::operator::{BoxOperator, LocalBoxOperator, Operator, OperatorExt};
     pub use crate::window::{Period, Tick, TickValue, TumblingWindow};
-
-    #[cfg(feature = "gat")]
-    pub use crate::gat::*;
 }
 
 pub use iter::IndicatorIteratorExt;

@@ -77,6 +77,7 @@ pub mod ticked;
 pub mod iter;
 
 /// Operator using GAT.
+#[cfg(feature = "gat")]
 pub mod gat;
 
 #[cfg(feature = "stream")]
@@ -97,6 +98,7 @@ pub mod reactive;
 
 /// Prelude.
 pub mod prelude {
+    #[cfg(feature = "gat")]
     pub use crate::gat::*;
     pub use crate::operator::{BoxOperator, LocalBoxOperator, Operator, OperatorExt};
     pub use crate::window::{Period, Tick, TickValue, TumblingWindow};

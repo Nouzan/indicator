@@ -17,11 +17,57 @@ pin_project! {
     }
 }
 
+#[cfg(not(feature = "send"))]
 impl<I, E, Si, F> Subscriber<I> for SinkSubscriber<Si, F>
 where
     Si: Sink<I, Error = E>,
     StreamError: From<E>,
     F: FnOnce(Result<(), StreamError>) -> Result<(), StreamError>,
+{
+    fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<bool, StreamError>> {
+        self.project()
+            .sink
+            .poll_ready(cx)
+            .map_err(StreamError::from)
+            .map_ok(|_| true)
+    }
+
+    fn start_send(self: Pin<&mut Self>, item: I) -> Result<(), StreamError> {
+        self.project().sink.start_send(item)?;
+        Ok(())
+    }
+
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<bool, StreamError>> {
+        self.project()
+            .sink
+            .poll_flush(cx)
+            .map_err(StreamError::from)
+            .map_ok(|_| true)
+    }
+
+    fn closing(self: Pin<&mut Self>, reason: Result<(), StreamError>) -> Result<(), StreamError> {
+        (self
+            .project()
+            .shutdown
+            .take()
+            .expect("`SinkSubscriber` has been closed"))(reason)?;
+        Ok(())
+    }
+
+    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), StreamError>> {
+        self.project()
+            .sink
+            .poll_close(cx)
+            .map_err(StreamError::from)
+    }
+}
+
+#[cfg(feature = "send")]
+impl<I, E, Si, F> Subscriber<I> for SinkSubscriber<Si, F>
+where
+    Si: Sink<I, Error = E> + Send,
+    StreamError: From<E>,
+    F: FnOnce(Result<(), StreamError>) -> Result<(), StreamError> + Send,
 {
     fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<bool, StreamError>> {
         self.project()

@@ -264,7 +264,7 @@ impl Period {
             1 => Self::day(offset),
             days => Self {
                 offset,
-                kind: PeriodKind::Duration(Duration::from_secs(days as u64 & DAY_SECS)),
+                kind: PeriodKind::Duration(Duration::from_secs(days as u64 * DAY_SECS)),
             },
         }
     }

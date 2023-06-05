@@ -21,7 +21,7 @@ Add `indicator` as a dependency of your project.
 
 ```toml
 [dependencies]
-indicator = "0.3"
+indicator = "0.4"
 rust_decimal = "1.17.0"
 rust_decimal_macros = "1.17.0"
 time = { version = "0.3", default-features = false, features = ["macros"] }

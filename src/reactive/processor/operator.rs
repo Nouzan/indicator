@@ -30,7 +30,7 @@ where
         Self {
             op,
             subscriber: None,
-            _input: PhantomData::default(),
+            _input: PhantomData,
         }
     }
 }

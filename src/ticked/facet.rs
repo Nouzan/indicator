@@ -13,7 +13,7 @@ pub struct Facet<I, P1, P2>(
 
 /// Combine two ticked operators into a [`Facet`] ticked operator.
 pub fn facet_t<I, P1, P2>(op1: P1, op2: P2) -> Facet<I, P1, P2> {
-    Facet(op1, op2, core::marker::PhantomData::default())
+    Facet(op1, op2, core::marker::PhantomData)
 }
 
 impl<I: Tickable + Clone, P1, P2> Operator<I> for Facet<I, P1, P2>
@@ -81,7 +81,7 @@ mod facet_map {
     {
         FacetMap(
             ops.into_iter().collect(),
-            core::marker::PhantomData::default(),
+            core::marker::PhantomData,
         )
     }
 }

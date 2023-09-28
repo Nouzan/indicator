@@ -1,4 +1,4 @@
-use core::ops::Deref;
+use core::{num::NonZeroUsize, ops::Deref};
 
 use crate::{
     context::{Context, ContextOperator, IntoValue, Value},
@@ -9,8 +9,30 @@ use super::Layer;
 
 /// Layer that *caches* and *clears* the final context,
 /// and then provides it to the next evaluation.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Cache;
+#[derive(Debug, Clone, Copy)]
+pub struct Cache {
+    length: NonZeroUsize,
+}
+
+impl Cache {
+    /// Creates a new `Cache` layer with length set to `1`.
+    pub fn new() -> Self {
+        Self {
+            length: NonZeroUsize::new(1).unwrap(),
+        }
+    }
+
+    /// Creates a new `Cache` layer with the specified length.
+    pub fn with_length(length: NonZeroUsize) -> Self {
+        Self { length }
+    }
+}
+
+impl Default for Cache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl<T, P> Layer<T, P> for Cache
 where
@@ -22,6 +44,7 @@ where
         CacheOperator {
             inner,
             previous: Previous::default(),
+            limit: self.length.get() - 1,
         }
     }
 }
@@ -33,6 +56,28 @@ pub struct Previous(Context);
 impl Previous {
     fn take(&mut self) -> Self {
         core::mem::take(self)
+    }
+
+    /// Iterates over the previous context.
+    pub fn backward<F>(&self, mut f: F)
+    where
+        F: FnMut(&Context),
+    {
+        f(&self.0);
+        if let Some(prev) = self.0.get::<Previous>() {
+            prev.backward(f);
+        }
+    }
+
+    /// Iterates over the previous context mutably.
+    fn backward_mut<F>(&mut self, mut f: F)
+    where
+        F: FnMut(&mut Context),
+    {
+        f(&mut self.0);
+        if let Some(prev) = self.0.get_mut::<Previous>() {
+            prev.backward_mut(f);
+        }
     }
 }
 
@@ -49,6 +94,7 @@ impl Deref for Previous {
 pub struct CacheOperator<P> {
     inner: P,
     previous: Previous,
+    limit: usize,
 }
 
 impl<T, P> Operator<Value<T>> for CacheOperator<P>
@@ -60,6 +106,26 @@ where
     fn next(&mut self, mut input: Value<T>) -> Self::Output {
         input.context_mut().insert(self.previous.take());
         let mut output = self.inner.next(input).into_value();
+        // Remove the previous context if the limit is reached.
+        // FIXME: There may be a better way to do this,
+        // like using a `Vec` or slice to store the previous contexts
+        // to avoid the recursive call.
+        if self.limit > 0 {
+            let limit = self.limit;
+            let mut count = 1;
+            output
+                .context_mut()
+                .get_mut::<Previous>()
+                .unwrap()
+                .backward_mut(|ctx| {
+                    if count >= limit {
+                        ctx.remove::<Previous>();
+                    }
+                    count += 1;
+                });
+        } else {
+            output.context_mut().remove::<Previous>();
+        }
         self.previous
             .0
             .extend(core::mem::take(output.context_mut()));
@@ -71,7 +137,7 @@ where
 mod tests {
     use crate::{
         context::{input, layer::layer_fn},
-        IndicatorIteratorExt,
+        IndicatorIteratorExt, OperatorExt,
     };
 
     use super::*;
@@ -92,18 +158,31 @@ mod tests {
                         .get::<Previous>()
                         .and_then(|prev| prev.get::<i32>().copied())
                         .unwrap_or(0);
-                    println!("prev: {}", prev);
                     ctx.insert(prev.pow(2) + *v);
                 });
                 self.0.next(input)
             }
         }
 
-        let op = input().with(layer_fn(|op| Square(op))).with(Cache).finish();
+        let op = input()
+            .map(|input| {
+                let previous = input.context().get::<Previous>().unwrap();
+                let mut count = 0;
+                previous.backward(|ctx| {
+                    if let Some(v) = ctx.get::<i32>() {
+                        println!("{count}: {v}");
+                    }
+                    count += 1;
+                });
+                input.map(|_, ctx| ctx.get::<i32>().copied().unwrap())
+            })
+            .with(layer_fn(|op| Square(op)))
+            .with(Cache::with_length(2.try_into().unwrap()))
+            .finish();
 
         let data = [1, 2, 3, 4, 5];
         data.into_iter().indicator(op).for_each(|v| {
-            println!("input: {v}");
+            println!("current: {v}");
         });
     }
 }

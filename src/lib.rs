@@ -96,6 +96,10 @@ pub mod async_operator;
 #[cfg(feature = "reactive")]
 pub mod reactive;
 
+/// Context Pattern.
+#[cfg(feature = "context")]
+pub mod context;
+
 /// Prelude.
 pub mod prelude {
     #[cfg(feature = "gat")]

@@ -56,6 +56,6 @@ where
     }
     Array {
         ops,
-        _input: core::marker::PhantomData::default(),
+        _input: core::marker::PhantomData,
     }
 }

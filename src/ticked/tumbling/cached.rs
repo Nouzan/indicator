@@ -14,7 +14,7 @@ pub trait CachedOperation<I, Q: QueueCapAtLeast<LEN, Item = I>, const LEN: usize
         P: CachedOperation<I, Q, LEN>,
         Self: Sized,
     {
-        Shared(self, op, core::marker::PhantomData::default())
+        Shared(self, op, core::marker::PhantomData)
     }
 }
 
@@ -110,6 +110,6 @@ pub mod shared_map {
         K: Clone + Eq + Hash,
         P: CachedOperation<I, Q, LEN>,
     {
-        SharedMap(map, PhantomData::default())
+        SharedMap(map, PhantomData)
     }
 }

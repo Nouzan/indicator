@@ -55,7 +55,7 @@ pub trait OperatorExt<I>: Operator<I> {
         Self: Sized,
         P2: Operator<Self::Output>,
     {
-        Then(self, other, core::marker::PhantomData::default())
+        Then(self, other, core::marker::PhantomData)
     }
 
     /// Combine with another operator with the same input type.

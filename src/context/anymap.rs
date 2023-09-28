@@ -30,9 +30,10 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-use alloc::{boxed::Box, fmt};
+use alloc::boxed::Box;
 use core::{
     any::{Any, TypeId},
+    fmt,
     hash::{BuildHasherDefault, Hasher},
 };
 use hashbrown::HashMap;

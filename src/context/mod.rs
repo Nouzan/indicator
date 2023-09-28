@@ -14,15 +14,15 @@ pub use self::{
     value::{input, Input, IntoValue, Value},
 };
 
-/// `Value`-operator.
-/// Alias for `Operator<Value<T>>`.
-pub trait ContextOperator<T>: Operator<Value<T>> {
+/// Operator that takes a `Value` as input and returns a `Value` as output.
+/// And can be converted to an operator without the `Value` wrapper.
+pub trait ContextOperator<T> {
     /// The output type.
     /// Just an alias for `Self::Output`.
-    type Out: IntoValue;
+    type Output: IntoValue;
 
-    /// Call the `next` method of the operator.
-    fn call(&mut self, input: Value<T>) -> Self::Out;
+    /// Apply the operator.
+    fn next(&mut self, input: Value<T>) -> Self::Output;
 
     /// Apply a layer.
     fn with<L>(self, layer: L) -> L::Output
@@ -32,6 +32,14 @@ pub trait ContextOperator<T>: Operator<Value<T>> {
     {
         layer.layer(self)
     }
+
+    /// Build into an operator without the `Value` wrapper.
+    fn finish(self) -> ContextedOperator<Self>
+    where
+        Self: Sized,
+    {
+        ContextedOperator(self)
+    }
 }
 
 impl<T, P> ContextOperator<T> for P
@@ -39,10 +47,26 @@ where
     P: Operator<Value<T>>,
     P::Output: IntoValue,
 {
-    type Out = P::Output;
+    type Output = P::Output;
 
     #[inline]
-    fn call(&mut self, input: Value<T>) -> Self::Out {
+    fn next(&mut self, input: Value<T>) -> Self::Output {
         self.next(input)
+    }
+}
+
+/// Context Operator.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ContextedOperator<P>(P);
+
+impl<T, P> Operator<T> for ContextedOperator<P>
+where
+    P: ContextOperator<T>,
+{
+    type Output = <<P as ContextOperator<T>>::Output as IntoValue>::Inner;
+
+    #[inline]
+    fn next(&mut self, input: T) -> Self::Output {
+        self.0.next(Value::new(input)).into_value().into_inner()
     }
 }

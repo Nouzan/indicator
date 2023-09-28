@@ -13,7 +13,7 @@ impl<I> core::fmt::Debug for Identity<I> {
 
 impl<I> Clone for Identity<I> {
     fn clone(&self) -> Self {
-        Self(PhantomData)
+        *self
     }
 }
 

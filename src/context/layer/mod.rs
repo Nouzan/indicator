@@ -4,6 +4,9 @@ use super::ContextOperator;
 /// and provides it to the next evaluation.
 pub mod cache;
 
+/// Layer that inserts a value into the context.
+pub mod insert;
+
 /// Layer.
 /// Convert an `In`-operator to another `In`-operator.
 pub trait Layer<T, P>

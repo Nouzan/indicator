@@ -136,7 +136,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        context::{input, layer::layer_fn},
+        context::{input, layer_fn, ContextOperatorExt},
         IndicatorIteratorExt, OperatorExt,
     };
 

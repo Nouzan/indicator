@@ -6,12 +6,16 @@ pub mod value;
 /// Convert an `In`-operator to another `In`-operator.
 pub mod layer;
 
+/// Output operator.
+pub mod output;
+
 use crate::Operator;
 
 pub use self::{
     anymap::Context,
-    layer::Layer,
-    value::{input, Input, IntoValue, Value},
+    layer::{layer_fn, Layer},
+    output::{output, output_with},
+    value::{input, IntoValue, Value, ValueRef},
 };
 
 /// Operator that takes a `Value` as input and returns a `Value` as output.
@@ -23,7 +27,23 @@ pub trait ContextOperator<T> {
 
     /// Apply the operator.
     fn next(&mut self, input: Value<T>) -> Self::Output;
+}
 
+impl<T, P> ContextOperator<T> for P
+where
+    P: Operator<Value<T>>,
+    P::Output: IntoValue,
+{
+    type Output = P::Output;
+
+    #[inline]
+    fn next(&mut self, input: Value<T>) -> Self::Output {
+        self.next(input)
+    }
+}
+
+/// Extension trait for [`ContextOperator`].
+pub trait ContextOperatorExt<T>: ContextOperator<T> {
     /// Apply a layer.
     fn with<L>(self, layer: L) -> L::Output
     where
@@ -42,20 +62,9 @@ pub trait ContextOperator<T> {
     }
 }
 
-impl<T, P> ContextOperator<T> for P
-where
-    P: Operator<Value<T>>,
-    P::Output: IntoValue,
-{
-    type Output = P::Output;
+impl<T, P> ContextOperatorExt<T> for P where P: ContextOperator<T> {}
 
-    #[inline]
-    fn next(&mut self, input: Value<T>) -> Self::Output {
-        self.next(input)
-    }
-}
-
-/// Context Operator.
+/// Contexted Operator.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ContextedOperator<P>(P);
 
@@ -68,5 +77,27 @@ where
     #[inline]
     fn next(&mut self, input: T) -> Self::Output {
         self.0.next(Value::new(input)).into_value().into_inner()
+    }
+}
+
+/// Operator that takes a [`ValueRef`] as input.
+pub trait RefOperator<'a, T> {
+    /// The output type.
+    type Output;
+
+    /// Apply the operator.
+    fn next(&mut self, input: ValueRef<'a, T>) -> Self::Output;
+}
+
+impl<'a, T, P> RefOperator<'a, T> for P
+where
+    P: Operator<ValueRef<'a, T>>,
+    T: 'a,
+{
+    type Output = P::Output;
+
+    #[inline]
+    fn next(&mut self, input: ValueRef<'a, T>) -> Self::Output {
+        self.next(input)
     }
 }

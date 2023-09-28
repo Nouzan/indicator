@@ -65,6 +65,14 @@ impl<T> Value<T> {
     pub(super) fn into_inner(self) -> T {
         self.value
     }
+
+    /// Create a reference to the value.
+    pub fn as_ref(&self) -> ValueRef<'_, T> {
+        ValueRef {
+            value: &self.value,
+            context: &self.context,
+        }
+    }
 }
 
 /// Type that can be converted to `Value`.
@@ -120,4 +128,13 @@ impl<T> Operator<Value<T>> for Input<T> {
 /// Create an identity operator `Input` that returns the input value.
 pub fn input<T>() -> Input<T> {
     Input(PhantomData)
+}
+
+/// Reference to a [`Value`].
+#[derive(Debug)]
+pub struct ValueRef<'a, T> {
+    /// Reference to the inner value.
+    pub value: &'a T,
+    /// Reference to the context.
+    pub context: &'a Context,
 }

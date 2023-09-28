@@ -87,18 +87,18 @@ impl From<OffsetDateTime> for Tick {
 
 impl PartialOrd for Tick {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self.0.as_ref(), other.0.as_ref()) {
-            (Some(lhs), Some(rhs)) => Some(lhs.cmp(rhs)),
-            (Some(_), None) => Some(Ordering::Greater),
-            (None, Some(_)) => Some(Ordering::Less),
-            (None, None) => Some(Ordering::Equal),
-        }
+        Some(self.cmp(other))
     }
 }
 
 impl Ord for Tick {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
+        match (self.0.as_ref(), other.0.as_ref()) {
+            (Some(lhs), Some(rhs)) => lhs.cmp(rhs),
+            (Some(_), None) => Ordering::Greater,
+            (None, Some(_)) => Ordering::Less,
+            (None, None) => Ordering::Equal,
+        }
     }
 }
 

@@ -7,7 +7,7 @@ license = "MIT"
 description = "Abstractions for stream aggregation, we call them `Indicator` s."
 repository = "https://github.com/Nouzan/indicator"
 keywords = ["stream", "no_std", "stream-processing", "aggregation"]
-rust-version = "1.66.1"
+rust-version = "1.67.0"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -20,24 +20,18 @@ default = ["std", "stream", "array-vec", "gat"]
 alloc = ["futures?/alloc", "time/alloc"]
 array-vec = ["arrayvec"]
 stream = ["futures", "pin-project-lite"]
-serde = ["dep:serde", "time/serde-human-readable", "time/serde-well-known", "humantime"]
+serde = [
+    "dep:serde",
+    "time/serde-human-readable",
+    "time/serde-well-known",
+    "humantime",
+]
 gat = ["tinyvec"]
 async = ["futures", "pin-project-lite"]
-reactive = [
-    "alloc",
-    "futures",
-    "pin-project-lite",
-    "tracing",
-]
+reactive = ["alloc", "futures", "pin-project-lite", "tracing"]
 
 # features that need `std`
-std = [
-    "alloc",
-    "time/std",
-    "futures?/std",
-    "thiserror",
-    "tracing?/std",
-]
+std = ["alloc", "time/std", "futures?/std", "thiserror", "tracing?/std"]
 parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
 send = []
@@ -48,9 +42,9 @@ optional = true
 default-features = false
 
 [dependencies.tinyvec]
- version = "1.6.0"
- features = ["alloc", "rustc_1_55"]
- optional = true
+version = "1.6.0"
+features = ["alloc", "rustc_1_55"]
+optional = true
 
 [dependencies.time]
 version = "0.3"

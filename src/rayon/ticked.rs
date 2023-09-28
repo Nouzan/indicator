@@ -84,8 +84,5 @@ where
     P::Output: Tickable,
     <P::Output as Tickable>::Value: Send,
 {
-    FacetMap(
-        ops.into_iter().collect(),
-        core::marker::PhantomData,
-    )
+    FacetMap(ops.into_iter().collect(), core::marker::PhantomData)
 }

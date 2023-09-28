@@ -79,9 +79,6 @@ mod facet_map {
         Q: Eq + Hash + Clone,
         It: IntoIterator<Item = (Q, P)>,
     {
-        FacetMap(
-            ops.into_iter().collect(),
-            core::marker::PhantomData,
-        )
+        FacetMap(ops.into_iter().collect(), core::marker::PhantomData)
     }
 }

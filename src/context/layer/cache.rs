@@ -55,11 +55,11 @@ impl<T, P> Operator<Value<T>> for CacheOperator<P>
 where
     P: ContextOperator<T>,
 {
-    type Output = Value<<P::Out as IntoValue>::Inner>;
+    type Output = Value<<P::Output as IntoValue>::Inner>;
 
     fn next(&mut self, mut input: Value<T>) -> Self::Output {
         input.context_mut().insert(self.previous.take());
-        let mut output = self.inner.call(input).into_value();
+        let mut output = self.inner.next(input).into_value();
         self.previous
             .0
             .extend(core::mem::take(output.context_mut()));
@@ -84,7 +84,7 @@ mod tests {
         where
             P: ContextOperator<i32>,
         {
-            type Output = P::Out;
+            type Output = P::Output;
 
             fn next(&mut self, mut input: Value<i32>) -> Self::Output {
                 input.apply(|v, ctx| {
@@ -95,18 +95,15 @@ mod tests {
                     println!("prev: {}", prev);
                     ctx.insert(prev.pow(2) + *v);
                 });
-                self.0.call(input)
+                self.0.next(input)
             }
         }
 
-        let op = input().with(layer_fn(|op| Square(op))).with(Cache);
+        let op = input().with(layer_fn(|op| Square(op))).with(Cache).finish();
 
         let data = [1, 2, 3, 4, 5];
-        data.into_iter()
-            .map(Value::new)
-            .indicator(op)
-            .for_each(|v| {
-                println!("input: {}", v.into_inner());
-            });
+        data.into_iter().indicator(op).for_each(|v| {
+            println!("input: {v}");
+        });
     }
 }

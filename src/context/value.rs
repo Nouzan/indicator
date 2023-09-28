@@ -62,7 +62,7 @@ impl<T> Value<T> {
     }
 
     /// Convert into the inner value.
-    pub fn into_inner(self) -> T {
+    pub(super) fn into_inner(self) -> T {
         self.value
     }
 }

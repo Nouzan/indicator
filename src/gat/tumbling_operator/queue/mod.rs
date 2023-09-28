@@ -167,10 +167,7 @@ pub struct View<'a, Q: Queue + ?Sized> {
 
 impl<'a, Q: Queue + ?Sized> Clone for View<'a, Q> {
     fn clone(&self) -> Self {
-        Self {
-            queue: self.queue,
-            change: self.change,
-        }
+        *self
     }
 }
 
@@ -212,7 +209,7 @@ pub struct QueueRef<'a, T>(View<'a, dyn Queue<Item = T> + 'a>);
 
 impl<'a, T> Clone for QueueRef<'a, T> {
     fn clone(&self) -> Self {
-        Self(self.0)
+        *self
     }
 }
 

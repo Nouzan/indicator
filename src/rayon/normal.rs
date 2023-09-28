@@ -67,8 +67,5 @@ where
     P: Operator<I> + Send,
     P::Output: Send,
 {
-    FacetMap(
-        ops.into_iter().collect(),
-        core::marker::PhantomData,
-    )
+    FacetMap(ops.into_iter().collect(), core::marker::PhantomData)
 }

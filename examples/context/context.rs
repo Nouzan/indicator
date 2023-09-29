@@ -1,9 +1,6 @@
-#![no_std]
-extern crate alloc;
-
-use alloc::vec::Vec;
 use indicator::{prelude::*, IndicatorIteratorExt};
 use num::Num;
+use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 
 struct AddTwo<T>(T);
@@ -37,7 +34,16 @@ where
 }
 
 fn main() -> anyhow::Result<()> {
-    let op = output_with(ma).insert(add_two).cache(1).finish();
+    let op = output_with(ma)
+        .inspect(|value| {
+            println!("input: {}", value.value);
+            if let Some(AddTwo(x)) = value.context.get::<AddTwo<Decimal>>() {
+                println!("AddTwo: {x}");
+            }
+        })
+        .insert(add_two)
+        .cache(1)
+        .finish();
     let data = [dec!(1), dec!(2), dec!(3)];
 
     assert_eq!(

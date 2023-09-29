@@ -14,11 +14,11 @@ pub mod output;
 
 use crate::Operator;
 
-use self::layer::{cache::CacheOperator, insert::InsertOperator};
+use self::layer::{cache::CacheOperator, insert::InsertOperator, inspect::InspectOperator};
 
 pub use self::{
     anymap::Context,
-    layer::{cache::Cache, insert::Insert, layer_fn, Layer},
+    layer::{cache::Cache, insert::Insert, inspect::Inspect, layer_fn, Layer},
     output::{output, output_with},
     value::{input, IntoValue, Value, ValueRef},
 };
@@ -87,6 +87,15 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
         Self: Sized,
     {
         self.with(Insert(f))
+    }
+
+    /// Add an inspect layer with the given closure.
+    fn inspect<F>(self, f: F) -> InspectOperator<Self, F>
+    where
+        F: Fn(ValueRef<'_, T>) + Clone,
+        Self: Sized,
+    {
+        self.with(Inspect(f))
     }
 }
 

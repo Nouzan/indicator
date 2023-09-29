@@ -3,7 +3,7 @@ members = ["crates/*", "examples"]
 resolver = "2"
 
 [workspace.package]
-version = "0.5.0-nightly"
+version = "0.4.1-alpha.0"
 edition = "2021"
 authors = ["Nouzan <clobraindie@outlook.com>"]
 license = "MIT"
@@ -13,6 +13,6 @@ keywords = ["stream", "no_std", "stream-processing", "aggregation"]
 rust-version = "1.67.0"
 
 [workspace.dependencies]
-indicator_derive = { path = "crates/indicator_derive", version = "0.5.0-nightly" }
+indicator_derive = { path = "crates/indicator_derive", version = "0.4.1-alpha.0" }
 rust_decimal = { version = "1.17.0", default-features = false }
 rust_decimal_macros = { version = "1.17.0", default-features = false }

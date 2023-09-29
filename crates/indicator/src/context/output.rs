@@ -42,10 +42,11 @@ where
 }
 
 /// Create an output operator that insert the output into the context.
-pub fn output_with<I, O, R>(operator: R) -> OutputWith<R>
+pub fn output_with<I, O, R, F>(operator: F) -> OutputWith<R>
 where
     R: for<'a> RefOperator<'a, I, Output = O>,
-    O: Clone + Send + Sync + 'static,
+    O: Send + Sync + 'static,
+    F: FnOnce() -> R,
 {
-    OutputWith(operator)
+    OutputWith(operator())
 }

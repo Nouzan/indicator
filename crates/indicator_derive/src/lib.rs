@@ -124,7 +124,7 @@ fn generate_struct_def(
 ) -> syn::Result<TokenStream2> {
     if generics.params.is_empty() {
         return Ok(quote! {
-            #[derive(Clone, Default)]
+            #[derive(Default)]
             #[allow(non_camel_case_types)]
             #vis struct #name;
         });
@@ -135,12 +135,6 @@ fn generate_struct_def(
         #(#docs)*
         #[allow(non_camel_case_types)]
         #vis struct #name #type_generics (core::marker::PhantomData<#phantom_data_type> ) #where_clause;
-
-        impl #impl_generics Clone for #name #type_generics #where_clause {
-            fn clone(&self) -> Self {
-                Self(core::marker::PhantomData)
-            }
-        }
 
         impl #impl_generics Default for #name #type_generics #where_clause {
             fn default() -> Self {

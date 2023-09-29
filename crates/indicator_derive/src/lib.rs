@@ -55,7 +55,7 @@ fn generate_operator(args: TokenStream, input: TokenStream) -> syn::Result<Token
 
     // Handle generics.
     let struct_def = generate_struct_def(&vis, &sig.generics, &name, &docs)?;
-    let (_, type_generics, where_clause) = sig.generics.split_for_impl();
+    let (orig_impl_generics, type_generics, where_clause) = sig.generics.split_for_impl();
 
     // Add lifetime to generics.
     let mut generics = sig.generics.clone();
@@ -82,6 +82,8 @@ fn generate_operator(args: TokenStream, input: TokenStream) -> syn::Result<Token
         ReturnType::Type(_, ty) => quote!(#ty),
     };
 
+    let stmts = block.stmts;
+
     // Expand.
     Ok(quote! {
         #struct_def
@@ -91,12 +93,12 @@ fn generate_operator(args: TokenStream, input: TokenStream) -> syn::Result<Token
 
             fn next(&mut self, input: #indicator::context::ValueRef<'value, #input_type>) -> Self::Output {
                 #(#extractors)*
-                #block
+                #(#stmts)*
             }
         }
 
         #(#docs)*
-        #vis fn #fn_name #type_generics() -> #name #type_generics #where_clause {
+        #vis fn #fn_name #orig_impl_generics() -> #name #type_generics #where_clause {
             #name::default()
         }
     })
@@ -104,6 +106,14 @@ fn generate_operator(args: TokenStream, input: TokenStream) -> syn::Result<Token
 
 fn parse_input_type(args: TokenStream) -> syn::Result<Type> {
     syn::parse::<Type>(args)
+}
+
+fn parse_extractor(arg: &PatType) -> syn::Result<TokenStream2> {
+    let indicator = indicator();
+    let PatType { pat, ty, .. } = arg;
+    Ok(quote! {
+        let #pat: #ty = #indicator::context::extractor::FromValueRef::from_value_ref(&input);
+    })
 }
 
 fn generate_struct_def(
@@ -120,10 +130,11 @@ fn generate_struct_def(
         });
     }
     let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
+    let phantom_data_type = generate_phantom_data_type(generics);
     Ok(quote! {
         #(#docs)*
         #[allow(non_camel_case_types)]
-        #vis struct #name #type_generics (core::marker::PhantomData #type_generics ) #where_clause;
+        #vis struct #name #type_generics (core::marker::PhantomData<#phantom_data_type> ) #where_clause;
 
         impl #impl_generics Clone for #name #type_generics #where_clause {
             fn clone(&self) -> Self {
@@ -139,10 +150,24 @@ fn generate_struct_def(
     })
 }
 
-fn parse_extractor(arg: &PatType) -> syn::Result<TokenStream2> {
-    let indicator = indicator();
-    let PatType { pat, ty, .. } = arg;
-    Ok(quote! {
-        let #pat: #ty = #indicator::context::extractor::FromValueRef::from_value_ref(input);
-    })
+fn generate_phantom_data_type(generics: &syn::Generics) -> Type {
+    let params: Vec<_> = generics
+        .params
+        .iter()
+        .filter_map(|param| {
+            if let syn::GenericParam::Type(type_param) = param {
+                let ident = &type_param.ident;
+                Some(quote! { #ident })
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Generate `fn() -> (generics)` type
+    let phantom_data_type = quote! { fn() -> (#(#params),*) };
+
+    // Parse as `fn() -> (generics)` type
+    let phantom_data_type: Type = syn::parse2(phantom_data_type).unwrap();
+    phantom_data_type
 }

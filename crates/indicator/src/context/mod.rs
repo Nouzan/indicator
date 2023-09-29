@@ -3,6 +3,9 @@ mod anymap;
 /// Value with context.
 pub mod value;
 
+/// Extractors.
+pub mod extractor;
+
 /// Convert an `In`-operator to another `In`-operator.
 pub mod layer;
 

@@ -108,6 +108,9 @@ pub mod prelude {
     pub use crate::window::{Period, Tick, TickValue, TumblingWindow};
 }
 
+#[cfg(feature = "indicator_derive")]
+pub use indicator_derive::*;
+
 pub use iter::IndicatorIteratorExt;
 pub use operator::{facet, map, Operator, OperatorExt};
 pub use ticked::{

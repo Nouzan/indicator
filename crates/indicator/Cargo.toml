@@ -29,13 +29,17 @@ serde = [
 gat = ["tinyvec"]
 async = ["futures", "pin-project-lite"]
 reactive = ["alloc", "futures", "pin-project-lite", "tracing"]
-context = ["hashbrown", "alloc"]
+context = ["hashbrown", "alloc", "indicator_derive"]
 
 # features that need `std`
 std = ["alloc", "time/std", "futures?/std", "thiserror", "tracing?/std"]
 parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
 send = []
+
+[dependencies.indicator_derive]
+workspace = true
+optional = true
 
 [dependencies.arrayvec]
 version = "0.7"
@@ -92,8 +96,8 @@ optional = true
 
 [dev-dependencies]
 time = { version = "0.3", default-features = false, features = ["macros"] }
-rust_decimal = "1.17.0"
-rust_decimal_macros = "1.17.0"
+rust_decimal.workspace = true
+rust_decimal_macros.workspace = true
 arrayvec = "0.7"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1"

@@ -7,13 +7,14 @@ use super::Layer;
 
 /// Layer that inserts a value into the context
 /// with a [`RefOperator`].
-pub struct Insert<R>(pub R);
+pub struct Insert<F>(pub F);
 
-impl<T, P, R, Out> Layer<T, P> for Insert<R>
+impl<T, P, R, Out, F> Layer<T, P> for Insert<F>
 where
     P: ContextOperator<T>,
-    R: for<'a> RefOperator<'a, T, Output = Out> + Clone,
+    R: for<'a> RefOperator<'a, T, Output = Out>,
     Out: Send + Sync + 'static,
+    F: Fn() -> R,
 {
     type Output = InsertOperator<P, R>;
 
@@ -21,7 +22,7 @@ where
     fn layer(&self, operator: P) -> Self::Output {
         InsertOperator {
             inner: operator,
-            insert: self.0.clone(),
+            insert: (self.0)(),
         }
     }
 }
@@ -80,8 +81,8 @@ mod tests {
             }
         }
 
-        let op = output_with(Bar)
-            .with(Insert(Foo))
+        let op = output_with(|| Bar)
+            .with(Insert(|| Foo))
             .with(Cache::with_length(1.try_into().unwrap()))
             .finish();
 

@@ -21,7 +21,7 @@ fn add_two<T: Num + Clone>(In(value): In<&T>) -> (T, T) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let op = output_with(add_two()).with(Insert(add_two())).finish();
+    let op = output_with(add_two).with(Insert(add_two)).finish();
     let data = [dec!(1), dec!(2), dec!(3)];
 
     assert_eq!(

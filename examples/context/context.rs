@@ -13,10 +13,7 @@ use rust_decimal_macros::dec;
 ///
 /// Just add two to the input, and return the result twice.
 #[operator(T)]
-fn add_two<T>(In(value): In<&T>) -> (T, T)
-where
-    T: Num + Clone,
-{
+fn add_two<T: Num + Clone>(In(value): In<&T>) -> (T, T) {
     (
         value.clone() + T::one() + T::one(),
         value.clone() + T::one() + T::one(),

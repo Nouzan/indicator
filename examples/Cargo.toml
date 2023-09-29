@@ -1,0 +1,27 @@
+[package]
+name = "examples"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description.workspace = true
+repository.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
+
+[features]
+context = ["indicator/context"]
+
+[dependencies]
+indicator = { path = "../crates/indicator", default-features = false }
+
+[dev-dependencies]
+anyhow = "1.0.75"
+rust_decimal.workspace = true
+rust_decimal_macros.workspace = true
+num = "0.4.1"
+
+[[example]]
+name = "context"
+path = "context/context.rs"
+required-features = ["context"]

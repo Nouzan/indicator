@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/*"]
+members = ["crates/*", "examples"]
 resolver = "2"
 
 [workspace.package]
@@ -11,3 +11,8 @@ description = "Abstractions for stream aggregation, we call them `Indicator` s."
 repository = "https://github.com/Nouzan/indicator"
 keywords = ["stream", "no_std", "stream-processing", "aggregation"]
 rust-version = "1.67.0"
+
+[workspace.dependencies]
+indicator_derive = { path = "crates/indicator_derive", version = "0.5.0-nightly" }
+rust_decimal = { version = "1.17.0", default-features = false }
+rust_decimal_macros = { version = "1.17.0", default-features = false }

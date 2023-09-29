@@ -14,9 +14,11 @@ pub mod output;
 
 use crate::Operator;
 
+use self::layer::{cache::CacheOperator, insert::InsertOperator};
+
 pub use self::{
     anymap::Context,
-    layer::{layer_fn, Layer},
+    layer::{cache::Cache, insert::Insert, layer_fn, Layer},
     output::{output, output_with},
     value::{input, IntoValue, Value, ValueRef},
 };
@@ -47,7 +49,7 @@ where
 
 /// Extension trait for [`ContextOperator`].
 pub trait ContextOperatorExt<T>: ContextOperator<T> {
-    /// Apply a layer.
+    /// Add a layer.
     fn with<L>(self, layer: L) -> L::Output
     where
         L: Layer<T, Self>,
@@ -62,6 +64,29 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
         Self: Sized,
     {
         ContextedOperator(self)
+    }
+
+    /// Add a cache layer with the given `length`.
+    /// # Panic
+    /// Panic if the length is 0.
+    fn cache(self, length: usize) -> CacheOperator<Self>
+    where
+        Self: Sized,
+    {
+        self.with(Cache::with_length(
+            length.try_into().expect("`length` cannot be 0"),
+        ))
+    }
+
+    /// Add a insert layer with the given [`RefOperator`] constructor
+    /// (i.e. a function that returns a [`RefOperator`]).
+    fn insert<R, Out>(self, f: impl Fn() -> R) -> InsertOperator<Self, R>
+    where
+        R: for<'a> RefOperator<'a, T, Output = Out>,
+        Out: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(Insert(f))
     }
 }
 

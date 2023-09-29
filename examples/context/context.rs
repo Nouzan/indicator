@@ -37,10 +37,7 @@ where
 }
 
 fn main() -> anyhow::Result<()> {
-    let op = output_with(ma)
-        .with(Insert(add_two))
-        .with(Cache::new())
-        .finish();
+    let op = output_with(ma).insert(add_two).cache(1).finish();
     let data = [dec!(1), dec!(2), dec!(3)];
 
     assert_eq!(

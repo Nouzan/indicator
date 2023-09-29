@@ -102,10 +102,18 @@ pub mod context;
 
 /// Prelude.
 pub mod prelude {
+    #[cfg(feature = "context")]
+    pub use crate::context::{
+        extractor::{Env, In, Prev},
+        layer::{cache::Cache, insert::Insert},
+        output, output_with, ContextOperatorExt,
+    };
     #[cfg(feature = "gat")]
     pub use crate::gat::*;
     pub use crate::operator::{BoxOperator, LocalBoxOperator, Operator, OperatorExt};
     pub use crate::window::{Period, Tick, TickValue, TumblingWindow};
+    #[cfg(feature = "indicator_derive")]
+    pub use indicator_derive::*;
 }
 
 #[cfg(feature = "indicator_derive")]

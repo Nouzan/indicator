@@ -2,14 +2,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use indicator::{
-    context::{
-        extractor::{Env, In, Prev},
-        layer::{cache::Cache, insert::Insert},
-        output_with, ContextOperatorExt,
-    },
-    operator, IndicatorIteratorExt,
-};
+use indicator::{prelude::*, IndicatorIteratorExt};
 use num::Num;
 use rust_decimal_macros::dec;
 

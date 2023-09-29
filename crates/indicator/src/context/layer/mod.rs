@@ -7,6 +7,9 @@ pub mod cache;
 /// Layer that inserts a value into the context.
 pub mod insert;
 
+/// Layer that used to inspect the context.
+pub mod inspect;
+
 /// Layer.
 /// Convert an `In`-operator to another `In`-operator.
 pub trait Layer<T, P>

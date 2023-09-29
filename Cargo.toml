@@ -1,5 +1,8 @@
-[package]
-name = "indicator"
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
 version = "0.5.0-nightly"
 edition = "2021"
 authors = ["Nouzan <clobraindie@outlook.com>"]
@@ -8,94 +11,3 @@ description = "Abstractions for stream aggregation, we call them `Indicator` s."
 repository = "https://github.com/Nouzan/indicator"
 keywords = ["stream", "no_std", "stream-processing", "aggregation"]
 rust-version = "1.67.0"
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
-
-[features]
-default = ["std", "stream", "array-vec", "gat"]
-
-# features that don't need `std`
-alloc = ["futures?/alloc", "time/alloc"]
-array-vec = ["arrayvec"]
-stream = ["futures", "pin-project-lite"]
-serde = [
-    "dep:serde",
-    "time/serde-human-readable",
-    "time/serde-well-known",
-    "humantime",
-]
-gat = ["tinyvec"]
-async = ["futures", "pin-project-lite"]
-reactive = ["alloc", "futures", "pin-project-lite", "tracing"]
-context = ["hashbrown", "alloc"]
-
-# features that need `std`
-std = ["alloc", "time/std", "futures?/std", "thiserror", "tracing?/std"]
-parallel = ["std", "rayon"]
-tower = ["std", "async", "tower-service"]
-send = []
-
-[dependencies.arrayvec]
-version = "0.7"
-optional = true
-default-features = false
-
-[dependencies.tinyvec]
-version = "1.6.0"
-features = ["alloc", "rustc_1_55"]
-optional = true
-
-[dependencies.time]
-version = "0.3"
-default-features = false
-
-[dependencies.futures]
-version = "0.3"
-optional = true
-default-features = false
-
-[dependencies.pin-project-lite]
-version = "0.2.7"
-optional = true
-
-[dependencies.serde]
-version = "1"
-features = ["derive"]
-optional = true
-
-[dependencies.rayon]
-version = "1.5.1"
-optional = true
-
-[dependencies.humantime]
-version = "2.1.0"
-optional = true
-
-[dependencies.tower-service]
-version = "0.3.1"
-optional = true
-
-[dependencies.thiserror]
-version = "1.0.37"
-optional = true
-
-[dependencies.tracing]
-version = "0.1.37"
-default-features = false
-optional = true
-
-[dependencies.hashbrown]
-version = "0.14.0"
-optional = true
-
-[dev-dependencies]
-time = { version = "0.3", default-features = false, features = ["macros"] }
-rust_decimal = "1.17.0"
-rust_decimal_macros = "1.17.0"
-arrayvec = "0.7"
-tokio = { version = "1", features = ["full"] }
-anyhow = "1"
-serde_json = "1"
-tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }

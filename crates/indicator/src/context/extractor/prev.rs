@@ -11,6 +11,14 @@ where
 {
     #[inline]
     fn from_value_ref(value: &ValueRef<'a, I>) -> Self {
-        Self(value.context.get::<Previous>().and_then(|prev| prev.get()))
+        Self(
+            value
+                .context
+                .get::<Previous>()
+                .expect(
+                    "`Previous` not found in the context. Perhaps you forgot to add `Cache` layer?",
+                )
+                .get::<T>(),
+        )
     }
 }

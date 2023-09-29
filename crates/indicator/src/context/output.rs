@@ -45,7 +45,7 @@ where
 pub fn output_with<I, O, R, F>(operator: F) -> OutputWith<R>
 where
     R: for<'a> RefOperator<'a, I, Output = O>,
-    O: Send + Sync + 'static,
+    O: Clone + Send + Sync + 'static,
     F: FnOnce() -> R,
 {
     OutputWith(operator())

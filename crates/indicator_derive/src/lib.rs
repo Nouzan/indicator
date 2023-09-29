@@ -49,7 +49,7 @@ fn generate_operator(args: TokenStream, input: TokenStream) -> syn::Result<Token
     // Generate struct name.
     let fn_name = &sig.ident;
     let name = Ident::new(
-        &fn_name.to_string().to_case(Case::Pascal),
+        &format!("{}Op", fn_name.to_string().to_case(Case::Pascal)),
         Span::call_site(),
     );
 

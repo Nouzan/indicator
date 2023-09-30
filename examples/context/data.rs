@@ -8,12 +8,13 @@ struct AddTwo<T>(T);
 
 /// An operator that just add two to the input.
 #[operator(T)]
-fn add_two<T>(In(value): In<&T>) -> AddTwo<T>
+fn add_two<T>(In(value): In<&T>, Data(data): Data<&&str>) -> AddTwo<T>
 where
     T: Num + Clone,
     T: Send + Sync + 'static,
 {
     let two = T::one() + T::one();
+    println!("add_two: {data}");
     AddTwo(value.clone() + two)
 }
 

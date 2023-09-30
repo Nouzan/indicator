@@ -9,7 +9,10 @@ pub mod env;
 /// Extract from previous context.
 pub mod prev;
 
-pub use self::{env::Env, input::In, prev::Prev};
+/// Extract from the data context.
+pub mod data;
+
+pub use self::{data::Data, env::Env, input::In, prev::Prev};
 
 /// Type that can extract from [`ValueRef`].
 pub trait FromValueRef<'a, T> {

@@ -44,7 +44,7 @@ where
     #[inline]
     fn next(&mut self, mut input: Value<T>) -> Self::Output {
         let value = self.insert.next(input.as_ref());
-        input.context_mut().insert(value);
+        input.context_mut().env_mut().insert(value);
         self.inner.next(input)
     }
 }
@@ -76,8 +76,8 @@ mod tests {
             type Output = f64;
 
             fn next(&mut self, input: ValueRef<'a, f64>) -> Self::Output {
-                let prev = input.context.get::<f64>().copied().unwrap_or(0.0);
-                (*input.context.get::<f64>().unwrap() + 1.0 + prev) / 2.0
+                let prev = input.context.env().get::<f64>().copied().unwrap_or(0.0);
+                (*input.context.env().get::<f64>().unwrap() + 1.0 + prev) / 2.0
             }
         }
 

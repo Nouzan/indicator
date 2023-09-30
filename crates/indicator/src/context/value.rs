@@ -19,7 +19,7 @@ impl<T> Value<T> {
     pub(super) fn new(value: T) -> Self {
         Self {
             value,
-            context: Context::new(),
+            context: Context::default(),
         }
     }
 

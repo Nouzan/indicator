@@ -64,9 +64,9 @@ impl Hasher for IdHasher {
 
 /// A type map to store values by type.
 #[derive(Default)]
-pub struct Context(Option<Box<AnyMap>>);
+pub struct Map(Option<Box<AnyMap>>);
 
-impl Context {
+impl Map {
     /// Create an empty `Context`.
     #[inline]
     pub fn new() -> Self {
@@ -126,7 +126,7 @@ impl Context {
     }
 
     /// Extend the `Context` with the given `Context`.
-    pub fn extend(&mut self, other: Context) {
+    pub fn extend(&mut self, other: Self) {
         if let Some(other) = other.0 {
             if let Some(map) = self.0.as_mut() {
                 map.extend(*other);
@@ -137,7 +137,7 @@ impl Context {
     }
 }
 
-impl fmt::Debug for Context {
+impl fmt::Debug for Map {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Context").field("len", &self.len()).finish()
     }
@@ -152,7 +152,7 @@ mod tests {
         #[derive(Debug, PartialEq)]
         struct Foo(i32);
 
-        let mut context = Context::new();
+        let mut context = Map::new();
         assert!(context.is_empty());
         assert_eq!(context.len(), 0);
 
@@ -176,5 +176,34 @@ mod tests {
         assert_eq!(context.remove::<i32>(), None);
         assert!(context.is_empty());
         assert_eq!(context.len(), 0);
+    }
+}
+
+/// Context for storing indicator datas.
+#[derive(Debug, Default)]
+pub struct Context {
+    env: Map,
+    data: Map,
+}
+
+impl Context {
+    /// Get the environment context.
+    pub fn env(&self) -> &Map {
+        &self.env
+    }
+
+    /// Get the environment context mutably.
+    pub fn env_mut(&mut self) -> &mut Map {
+        &mut self.env
+    }
+
+    /// Get the data context.
+    pub(crate) fn data(&self) -> &Map {
+        &self.data
+    }
+
+    /// Get the data context mutably.
+    pub(crate) fn data_mut(&mut self) -> &mut Map {
+        &mut self.data
     }
 }

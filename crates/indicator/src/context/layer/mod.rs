@@ -10,6 +10,9 @@ pub mod insert;
 /// Layer that used to inspect the context.
 pub mod inspect;
 
+/// Layer for manipulating the data context.
+pub mod data;
+
 /// Layer.
 /// Convert an `In`-operator to another `In`-operator.
 pub trait Layer<T, P>

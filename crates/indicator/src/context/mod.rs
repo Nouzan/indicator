@@ -14,11 +14,17 @@ pub mod output;
 
 use crate::Operator;
 
-use self::layer::{cache::CacheOperator, insert::InsertOperator, inspect::InspectOperator};
+use self::{
+    anymap::Map,
+    layer::{
+        cache::CacheOperator, data::AddDataOperator, insert::InsertOperator,
+        inspect::InspectOperator,
+    },
+};
 
 pub use self::{
     anymap::Context,
-    layer::{cache::Cache, insert::Insert, inspect::Inspect, layer_fn, Layer},
+    layer::{cache::Cache, data::AddData, insert::Insert, inspect::Inspect, layer_fn, Layer},
     output::{output, output_with},
     value::{input, IntoValue, Value, ValueRef},
 };
@@ -63,7 +69,7 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
     where
         Self: Sized,
     {
-        ContextedOperator(self)
+        ContextedOperator(self, Map::default())
     }
 
     /// Add a cache layer with the given `length`.
@@ -97,13 +103,40 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
     {
         self.with(Inspect(f))
     }
+
+    /// Provide data to the context.
+    fn provide<D>(self, data: D) -> AddDataOperator<D, Self>
+    where
+        D: Clone + Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(AddData::with_data(data))
+    }
+
+    /// Provide data to the context with the given data provider.
+    fn provide_with<D>(self, provider: impl Fn() -> Option<D> + 'static) -> AddDataOperator<D, Self>
+    where
+        D: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(AddData::new(provider))
+    }
+
+    /// Declare that the data of type `D` is in the context.
+    fn from_context<D>(self) -> AddDataOperator<D, Self>
+    where
+        D: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(AddData::<D>::from_context())
+    }
 }
 
 impl<T, P> ContextOperatorExt<T> for P where P: ContextOperator<T> {}
 
 /// Contexted Operator.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct ContextedOperator<P>(P);
+#[derive(Debug, Default)]
+pub struct ContextedOperator<P>(P, Map);
 
 impl<T, P> Operator<T> for ContextedOperator<P>
 where
@@ -113,7 +146,12 @@ where
 
     #[inline]
     fn next(&mut self, input: T) -> Self::Output {
-        self.0.next(Value::new(input)).into_value().into_inner()
+        let mut value = self
+            .0
+            .next(Value::with_data(input, core::mem::take(&mut self.1)))
+            .into_value();
+        core::mem::swap(&mut self.1, value.context_mut().data_mut());
+        value.into_inner()
     }
 }
 

@@ -187,6 +187,14 @@ pub struct Context {
 }
 
 impl Context {
+    /// Create an `Context` with empty environment and the given data context.
+    pub fn with_data(data: Map) -> Self {
+        Self {
+            env: Map::new(),
+            data,
+        }
+    }
+
     /// Get the environment context.
     pub fn env(&self) -> &Map {
         &self.env
@@ -198,7 +206,7 @@ impl Context {
     }
 
     /// Get the data context.
-    pub(crate) fn data(&self) -> &Map {
+    pub fn data(&self) -> &Map {
         &self.data
     }
 

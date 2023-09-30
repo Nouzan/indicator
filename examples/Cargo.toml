@@ -25,3 +25,8 @@ num = "0.4.1"
 name = "context"
 path = "context/context.rs"
 required-features = ["context"]
+
+[[example]]
+name = "data"
+path = "context/data.rs"
+required-features = ["context"]

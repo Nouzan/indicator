@@ -2,7 +2,7 @@ use core::{fmt, marker::PhantomData};
 
 use crate::Operator;
 
-use super::Context;
+use super::{anymap::Map, Context};
 
 /// Value with context.
 #[derive(Debug)]
@@ -16,10 +16,10 @@ pub struct Value<T> {
 impl<T> Value<T> {
     /// Create a new `Value` with the given value.
     #[inline]
-    pub(super) fn new(value: T) -> Self {
+    pub(super) fn with_data(value: T, data: Map) -> Self {
         Self {
             value,
-            context: Context::default(),
+            context: Context::with_data(data),
         }
     }
 

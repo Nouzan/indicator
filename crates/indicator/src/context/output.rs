@@ -36,7 +36,7 @@ where
     #[inline]
     fn next(&mut self, mut input: Value<T>) -> Self::Output {
         let value = self.0.next(input.as_ref());
-        input.context_mut().insert(value.clone());
+        input.context_mut().env_mut().insert(value.clone());
         input.map(|_, _| value)
     }
 }

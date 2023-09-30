@@ -14,6 +14,7 @@ where
         Self(
             value
                 .context
+                .env()
                 .get::<Previous>()
                 .expect(
                     "`Previous` not found in the context. Perhaps you forgot to add `Cache` layer?",

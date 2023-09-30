@@ -65,11 +65,21 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
     }
 
     /// Build into an operator without the `Value` wrapper.
+    #[inline]
     fn finish(self) -> ContextedOperator<Self>
     where
         Self: Sized,
     {
-        ContextedOperator(self, Map::default())
+        self.finish_with_data(Map::default())
+    }
+
+    /// Build into an operator without the `Value` wrapper with the given data context.
+    #[inline]
+    fn finish_with_data(self, data: Map) -> ContextedOperator<Self>
+    where
+        Self: Sized,
+    {
+        ContextedOperator(self, data)
     }
 
     /// Add a cache layer with the given `length`.

@@ -17,14 +17,22 @@ use crate::Operator;
 use self::{
     anymap::Map,
     layer::{
-        cache::CacheOperator, data::AddDataOperator, insert::InsertOperator,
+        cache::CacheOperator,
+        data::AddDataOperator,
+        insert::{InsertDataOperator, InsertOperator},
         inspect::InspectOperator,
     },
 };
 
 pub use self::{
     anymap::Context,
-    layer::{cache::Cache, data::AddData, insert::Insert, inspect::Inspect, layer_fn, Layer},
+    layer::{
+        cache::Cache,
+        data::AddData,
+        insert::{Insert, InsertData},
+        inspect::Inspect,
+        layer_fn, Layer,
+    },
     output::{output, output_with},
     value::{input, IntoValue, Value, ValueRef},
 };
@@ -94,7 +102,7 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
         ))
     }
 
-    /// Add a insert layer with the given [`RefOperator`] constructor
+    /// Add a [`Insert`] layer with the given [`RefOperator`] constructor
     /// (i.e. a function that returns a [`RefOperator`]).
     fn insert<R, Out>(self, f: impl Fn() -> R) -> InsertOperator<Self, R>
     where
@@ -103,6 +111,17 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
         Self: Sized,
     {
         self.with(Insert(f))
+    }
+
+    /// Add a [`InsertData`] layer with the given [`RefOperator`] constructor.
+    /// (i.e. a function that returns a [`RefOperator`]).
+    fn insert_data<R, Out>(self, f: impl Fn() -> R) -> InsertDataOperator<Self, R>
+    where
+        R: for<'a> RefOperator<'a, T, Output = Out>,
+        Out: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(InsertData(f))
     }
 
     /// Add an inspect layer with the given closure.

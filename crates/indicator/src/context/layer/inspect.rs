@@ -10,10 +10,11 @@ where
     P: ContextOperator<T>,
     F: Fn(ValueRef<'_, T>) + Clone,
 {
-    type Output = InspectOperator<P, F>;
+    type Operator = InspectOperator<P, F>;
+    type Out = P::Out;
 
     #[inline]
-    fn layer(&self, operator: P) -> Self::Output {
+    fn layer(&self, operator: P) -> Self::Operator {
         InspectOperator {
             inner: operator,
             inspect: self.0.clone(),
@@ -32,10 +33,10 @@ where
     P: ContextOperator<T>,
     F: Fn(ValueRef<'_, T>),
 {
-    type Output = P::Output;
+    type Out = P::Out;
 
     #[inline]
-    fn next(&mut self, input: Value<T>) -> Self::Output {
+    fn next(&mut self, input: Value<T>) -> Value<Self::Out> {
         (self.inspect)(input.as_ref());
         self.inner.next(input)
     }

@@ -39,9 +39,10 @@ where
     P: ContextOperator<I>,
     T: Send + Sync + 'static,
 {
-    type Output = AddDataOperator<T, P>;
+    type Operator = AddDataOperator<T, P>;
+    type Out = P::Out;
 
-    fn layer(&self, operator: P) -> Self::Output {
+    fn layer(&self, operator: P) -> Self::Operator {
         AddDataOperator {
             data: (self.0)(),
             inner: operator,
@@ -63,7 +64,7 @@ where
     P: ContextOperator<I>,
     T: Send + Sync + 'static,
 {
-    type Output = P::Output;
+    type Output = Value<P::Out>;
 
     #[inline]
     fn next(&mut self, mut input: Value<I>) -> Self::Output {

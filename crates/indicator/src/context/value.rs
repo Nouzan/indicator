@@ -75,24 +75,6 @@ impl<T> Value<T> {
     }
 }
 
-/// Type that can be converted to `Value`.
-pub trait IntoValue {
-    /// The contained type.
-    type Inner;
-
-    /// Convert to `Value`.
-    fn into_value(self) -> Value<Self::Inner>;
-}
-
-impl<T> IntoValue for Value<T> {
-    type Inner = T;
-
-    #[inline]
-    fn into_value(self) -> Value<Self::Inner> {
-        self
-    }
-}
-
 /// An identity operator that just returns the input.
 pub struct Input<T>(PhantomData<fn() -> T>);
 

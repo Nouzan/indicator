@@ -1,6 +1,6 @@
 use self::stack::Stack;
 
-use super::ContextOperator;
+use super::{AddData, ContextOperator, Insert, InsertData, Inspect, RefOperator, ValueRef};
 
 /// Layer that caches the final context,
 /// and provides it to the next evaluation.
@@ -70,7 +70,67 @@ where
         Outer: Layer<In, Self::Operator>,
         Self: Sized,
     {
-        stack::Stack(self, outer)
+        Stack(self, outer)
+    }
+
+    /// Add a [`Insert`] layer with the given [`RefOperator`] constructor
+    /// (i.e. a function that returns a [`RefOperator`]).
+    fn insert<R, Out, F>(self, f: F) -> Stack<Self, Insert<F>>
+    where
+        F: Fn() -> R,
+        R: for<'a> RefOperator<'a, In, Output = Out>,
+        Out: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(Insert(f))
+    }
+
+    /// Add a [`InsertData`] layer with the given [`RefOperator`] constructor.
+    /// (i.e. a function that returns a [`RefOperator`]).
+    fn insert_data<R, Out, F>(self, f: F) -> Stack<Self, InsertData<F>>
+    where
+        F: Fn() -> R,
+        R: for<'a> RefOperator<'a, In, Output = Out>,
+        Out: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(InsertData(f))
+    }
+
+    /// Add an inspect layer with the given closure.
+    fn inspect<F>(self, f: F) -> Stack<Self, Inspect<F>>
+    where
+        F: Fn(ValueRef<'_, In>) + Clone,
+        Self: Sized,
+    {
+        self.with(Inspect(f))
+    }
+
+    /// Provide data to the context.
+    fn provide<D>(self, data: D) -> Stack<Self, AddData<D>>
+    where
+        D: Clone + Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(AddData::with_data(data))
+    }
+
+    /// Provide data to the context with the given data provider.
+    fn provide_with<D>(self, provider: impl Fn() -> Option<D> + 'static) -> Stack<Self, AddData<D>>
+    where
+        D: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(AddData::new(provider))
+    }
+
+    /// Declare that the data of type `D` is in the context.
+    fn from_context<D>(self) -> Stack<Self, AddData<D>>
+    where
+        D: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(AddData::<D>::from_context())
     }
 }
 

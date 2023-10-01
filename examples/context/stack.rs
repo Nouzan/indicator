@@ -1,8 +1,4 @@
-use indicator::{
-    context::{AddData, Cache, Insert},
-    prelude::*,
-    IndicatorIteratorExt,
-};
+use indicator::{prelude::*, IndicatorIteratorExt};
 use num::Num;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -15,9 +11,7 @@ where
     T: Num + Clone,
     P: ContextOperator<T>,
 {
-    id_layer()
-        .with(Insert(ma::<T, N>))
-        .with(AddData::with_data(Alpha::<T, N>(alhpa)))
+    id_layer().insert(ma::<_, N>).provide(Alpha::<_, N>(alhpa))
 }
 
 /// Config for `ma` operator.
@@ -50,7 +44,7 @@ fn main() -> anyhow::Result<()> {
         })
         .with(ma_stack::<_, _, 1>(dec!(0.5)))
         // We cannot add cache to the stack, because the inner cache will clear the env before the next cache to collect.
-        .with(Cache::new())
+        .cache(1)
         .finish();
 
     let data = [dec!(1), dec!(2), dec!(3)];

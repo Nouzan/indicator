@@ -30,3 +30,8 @@ required-features = ["context"]
 name = "data"
 path = "context/data.rs"
 required-features = ["context"]
+
+[[example]]
+name = "stack"
+path = "context/stack.rs"
+required-features = ["context"]

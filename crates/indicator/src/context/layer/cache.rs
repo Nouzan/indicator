@@ -1,7 +1,7 @@
 use core::{num::NonZeroUsize, ops::Deref};
 
 use crate::{
-    context::{anymap::Map, ContextOperator, IntoValue, Value},
+    context::{anymap::Map, ContextOperator, Value},
     Operator,
 };
 
@@ -38,9 +38,10 @@ impl<T, P> Layer<T, P> for Cache
 where
     P: ContextOperator<T>,
 {
-    type Output = CacheOperator<P>;
+    type Operator = CacheOperator<P>;
+    type Out = P::Out;
 
-    fn layer(&self, inner: P) -> Self::Output {
+    fn layer(&self, inner: P) -> Self::Operator {
         CacheOperator {
             inner,
             previous: Previous::default(),
@@ -101,11 +102,11 @@ impl<T, P> Operator<Value<T>> for CacheOperator<P>
 where
     P: ContextOperator<T>,
 {
-    type Output = Value<<P::Output as IntoValue>::Inner>;
+    type Output = Value<P::Out>;
 
     fn next(&mut self, mut input: Value<T>) -> Self::Output {
         input.context_mut().env_mut().insert(self.previous.take());
-        let mut output = self.inner.next(input).into_value();
+        let mut output = self.inner.next(input);
         // Remove the previous context if the limit is reached.
         // FIXME: There may be a better way to do this,
         // like using a `Vec` or slice to store the previous contexts
@@ -151,7 +152,7 @@ mod tests {
         where
             P: ContextOperator<i32>,
         {
-            type Output = P::Output;
+            type Output = Value<P::Out>;
 
             fn next(&mut self, mut input: Value<i32>) -> Self::Output {
                 input.apply(|v, ctx| {

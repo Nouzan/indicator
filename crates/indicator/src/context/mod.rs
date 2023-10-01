@@ -34,39 +34,37 @@ pub use self::{
         layer_fn, Layer,
     },
     output::{output, output_with},
-    value::{input, IntoValue, Value, ValueRef},
+    value::{input, Value, ValueRef},
 };
 
-/// Operator that takes a `Value` as input and returns a `Value` as output.
-/// And can be converted to an operator without the `Value` wrapper.
-pub trait ContextOperator<T> {
-    /// The output type.
-    /// Just an alias for `Self::Output`.
-    type Output: IntoValue;
+/// Operator that takes a [`Value`] as input and returns a [`Value`] as output.
+/// And can be converted to an operator without the [`Value`] wrapper.
+pub trait ContextOperator<In> {
+    /// The output type inside the [`Value`] wrapper.
+    type Out;
 
     /// Apply the operator.
-    fn next(&mut self, input: Value<T>) -> Self::Output;
+    fn next(&mut self, input: Value<In>) -> Value<Self::Out>;
 }
 
-impl<T, P> ContextOperator<T> for P
+impl<In, P, Out> ContextOperator<In> for P
 where
-    P: Operator<Value<T>>,
-    P::Output: IntoValue,
+    P: Operator<Value<In>, Output = Value<Out>>,
 {
-    type Output = P::Output;
+    type Out = Out;
 
     #[inline]
-    fn next(&mut self, input: Value<T>) -> Self::Output {
+    fn next(&mut self, input: Value<In>) -> Value<Out> {
         self.next(input)
     }
 }
 
 /// Extension trait for [`ContextOperator`].
-pub trait ContextOperatorExt<T>: ContextOperator<T> {
+pub trait ContextOperatorExt<In>: ContextOperator<In> {
     /// Add a layer.
-    fn with<L>(self, layer: L) -> L::Output
+    fn with<L>(self, layer: L) -> L::Operator
     where
-        L: Layer<T, Self>,
+        L: Layer<In, Self>,
         Self: Sized,
     {
         layer.layer(self)
@@ -106,7 +104,7 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
     /// (i.e. a function that returns a [`RefOperator`]).
     fn insert<R, Out>(self, f: impl Fn() -> R) -> InsertOperator<Self, R>
     where
-        R: for<'a> RefOperator<'a, T, Output = Out>,
+        R: for<'a> RefOperator<'a, In, Output = Out>,
         Out: Send + Sync + 'static,
         Self: Sized,
     {
@@ -117,7 +115,7 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
     /// (i.e. a function that returns a [`RefOperator`]).
     fn insert_data<R, Out>(self, f: impl Fn() -> R) -> InsertDataOperator<Self, R>
     where
-        R: for<'a> RefOperator<'a, T, Output = Out>,
+        R: for<'a> RefOperator<'a, In, Output = Out>,
         Out: Send + Sync + 'static,
         Self: Sized,
     {
@@ -127,7 +125,7 @@ pub trait ContextOperatorExt<T>: ContextOperator<T> {
     /// Add an inspect layer with the given closure.
     fn inspect<F>(self, f: F) -> InspectOperator<Self, F>
     where
-        F: Fn(ValueRef<'_, T>) + Clone,
+        F: Fn(ValueRef<'_, In>) + Clone,
         Self: Sized,
     {
         self.with(Inspect(f))
@@ -167,41 +165,40 @@ impl<T, P> ContextOperatorExt<T> for P where P: ContextOperator<T> {}
 #[derive(Debug, Default)]
 pub struct ContextedOperator<P>(P, Map);
 
-impl<T, P> Operator<T> for ContextedOperator<P>
+impl<In, P> Operator<In> for ContextedOperator<P>
 where
-    P: ContextOperator<T>,
+    P: ContextOperator<In>,
 {
-    type Output = <<P as ContextOperator<T>>::Output as IntoValue>::Inner;
+    type Output = P::Out;
 
     #[inline]
-    fn next(&mut self, input: T) -> Self::Output {
+    fn next(&mut self, input: In) -> Self::Output {
         let mut value = self
             .0
-            .next(Value::with_data(input, core::mem::take(&mut self.1)))
-            .into_value();
+            .next(Value::with_data(input, core::mem::take(&mut self.1)));
         core::mem::swap(&mut self.1, value.context_mut().data_mut());
         value.into_inner()
     }
 }
 
 /// Operator that takes a [`ValueRef`] as input.
-pub trait RefOperator<'a, T> {
+pub trait RefOperator<'a, In> {
     /// The output type.
     type Output;
 
     /// Apply the operator.
-    fn next(&mut self, input: ValueRef<'a, T>) -> Self::Output;
+    fn next(&mut self, input: ValueRef<'a, In>) -> Self::Output;
 }
 
-impl<'a, T, P> RefOperator<'a, T> for P
+impl<'a, In, P> RefOperator<'a, In> for P
 where
-    P: Operator<ValueRef<'a, T>>,
-    T: 'a,
+    P: Operator<ValueRef<'a, In>>,
+    In: 'a,
 {
     type Output = P::Output;
 
     #[inline]
-    fn next(&mut self, input: ValueRef<'a, T>) -> Self::Output {
+    fn next(&mut self, input: ValueRef<'a, In>) -> Self::Output {
         self.next(input)
     }
 }

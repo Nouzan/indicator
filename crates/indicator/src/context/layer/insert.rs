@@ -16,10 +16,11 @@ where
     Out: Send + Sync + 'static,
     F: Fn() -> R,
 {
-    type Output = InsertOperator<P, R>;
+    type Operator = InsertOperator<P, R>;
+    type Out = P::Out;
 
     #[inline]
-    fn layer(&self, operator: P) -> Self::Output {
+    fn layer(&self, operator: P) -> Self::Operator {
         InsertOperator {
             inner: operator,
             insert: (self.0)(),
@@ -39,7 +40,7 @@ where
     R: for<'a> RefOperator<'a, T, Output = Out>,
     Out: Send + Sync + 'static,
 {
-    type Output = P::Output;
+    type Output = Value<P::Out>;
 
     #[inline]
     fn next(&mut self, mut input: Value<T>) -> Self::Output {
@@ -60,10 +61,11 @@ where
     Out: Send + Sync + 'static,
     F: Fn() -> R,
 {
-    type Output = InsertDataOperator<P, R>;
+    type Operator = InsertDataOperator<P, R>;
+    type Out = P::Out;
 
     #[inline]
-    fn layer(&self, operator: P) -> Self::Output {
+    fn layer(&self, operator: P) -> Self::Operator {
         InsertDataOperator {
             inner: operator,
             insert: (self.0)(),
@@ -83,7 +85,7 @@ where
     R: for<'a> RefOperator<'a, T, Output = Out>,
     Out: Send + Sync + 'static,
 {
-    type Output = P::Output;
+    type Output = Value<P::Out>;
 
     #[inline]
     fn next(&mut self, mut input: Value<T>) -> Self::Output {

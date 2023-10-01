@@ -90,7 +90,7 @@ where
     fn insert_data<R, Out, F>(self, f: F) -> Stack<Self, InsertData<F>>
     where
         F: Fn() -> R,
-        R: for<'a> RefOperator<'a, In, Output = Out>,
+        R: for<'a> RefOperator<'a, In, Output = Option<Out>>,
         Out: Send + Sync + 'static,
         Self: Sized,
     {

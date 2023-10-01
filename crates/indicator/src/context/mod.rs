@@ -115,7 +115,7 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
     /// (i.e. a function that returns a [`RefOperator`]).
     fn insert_data<R, Out>(self, f: impl Fn() -> R) -> InsertDataOperator<Self, R>
     where
-        R: for<'a> RefOperator<'a, In, Output = Out>,
+        R: for<'a> RefOperator<'a, In, Output = Option<Out>>,
         Out: Send + Sync + 'static,
         Self: Sized,
     {

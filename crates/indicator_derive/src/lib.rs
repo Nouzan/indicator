@@ -134,7 +134,7 @@ fn generate_struct_def(
     Ok(quote! {
         #(#docs)*
         #[allow(non_camel_case_types)]
-        #vis struct #name #type_generics (core::marker::PhantomData<#phantom_data_type> ) #where_clause;
+        #vis struct #name #impl_generics (core::marker::PhantomData<#phantom_data_type> ) #where_clause;
 
         impl #impl_generics Default for #name #type_generics #where_clause {
             fn default() -> Self {

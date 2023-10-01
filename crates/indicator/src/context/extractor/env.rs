@@ -16,3 +16,13 @@ where
         }))
     }
 }
+
+impl<'a, I, T> FromValueRef<'a, I> for Env<Option<&'a T>>
+where
+    T: Send + Sync + 'static,
+{
+    #[inline]
+    fn from_value_ref(value: &ValueRef<'a, I>) -> Self {
+        Self(value.context.env().get::<T>())
+    }
+}

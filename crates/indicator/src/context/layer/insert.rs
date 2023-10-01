@@ -57,7 +57,7 @@ pub struct InsertData<F>(pub F);
 impl<T, P, R, Out, F> Layer<T, P> for InsertData<F>
 where
     P: ContextOperator<T>,
-    R: for<'a> RefOperator<'a, T, Output = Out>,
+    R: for<'a> RefOperator<'a, T, Output = Option<Out>>,
     Out: Send + Sync + 'static,
     F: Fn() -> R,
 {
@@ -82,15 +82,16 @@ pub struct InsertDataOperator<P, R> {
 impl<T, P, R, Out> Operator<Value<T>> for InsertDataOperator<P, R>
 where
     P: ContextOperator<T>,
-    R: for<'a> RefOperator<'a, T, Output = Out>,
+    R: for<'a> RefOperator<'a, T, Output = Option<Out>>,
     Out: Send + Sync + 'static,
 {
     type Output = Value<P::Out>;
 
     #[inline]
     fn next(&mut self, mut input: Value<T>) -> Self::Output {
-        let value = self.insert.next(input.as_ref());
-        input.context_mut().data_mut().insert(value);
+        if let Some(value) = self.insert.next(input.as_ref()) {
+            input.context_mut().data_mut().insert(value);
+        }
         self.inner.next(input)
     }
 }
@@ -145,27 +146,39 @@ mod tests {
         #[derive(Clone)]
         struct Counter;
 
-        impl<'a> Operator<ValueRef<'a, f64>> for Counter {
-            type Output = usize;
+        impl<'a> Operator<ValueRef<'a, usize>> for Counter {
+            type Output = Option<usize>;
 
-            fn next(&mut self, input: ValueRef<'a, f64>) -> Self::Output {
-                let count = input.context.data().get::<usize>().copied().unwrap_or(0);
-                count + 1
+            fn next(&mut self, input: ValueRef<'a, usize>) -> Self::Output {
+                let mut should_insert = false;
+                let count = input
+                    .context
+                    .data()
+                    .get::<usize>()
+                    .copied()
+                    .unwrap_or_else(|| {
+                        should_insert = true;
+                        0
+                    });
+                if input.value % 2 == 0 {
+                    Some(count + 1)
+                } else if should_insert {
+                    Some(count)
+                } else {
+                    None
+                }
             }
         }
 
-        let op = output(|_, ctx| {
-            let count = ctx.data().get::<usize>().copied().unwrap();
-            count as f64
-        })
-        .with(InsertData(|| Counter))
-        .with(Cache::with_length(1.try_into().unwrap()))
-        .finish();
+        let op = output(|_, ctx| ctx.data().get::<usize>().copied().unwrap())
+            .with(InsertData(|| Counter))
+            .with(Cache::with_length(1.try_into().unwrap()))
+            .finish();
 
-        let data = [1.0, 2.0, 3.0, 4.0, 5.0];
+        let data = [1, 2, 3, 4, 5];
         assert_eq!(
             data.into_iter().indicator(op).collect::<Vec<_>>(),
-            [1.0, 2.0, 3.0, 4.0, 5.0]
+            [0, 1, 1, 2, 2]
         );
     }
 }

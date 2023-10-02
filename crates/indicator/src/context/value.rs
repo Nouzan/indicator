@@ -116,7 +116,21 @@ pub fn input<T>() -> Input<T> {
 #[derive(Debug)]
 pub struct ValueRef<'a, T> {
     /// Reference to the inner value.
-    pub value: &'a T,
+    pub(crate) value: &'a T,
     /// Reference to the context.
-    pub context: &'a Context,
+    pub(crate) context: &'a Context,
+}
+
+impl<'a, T> ValueRef<'a, T> {
+    /// Get the reference to the inner value.
+    #[inline]
+    pub fn value(&self) -> &'a T {
+        self.value
+    }
+
+    /// Get the reference to the context.
+    #[inline]
+    pub fn context(&self) -> &'a Context {
+        self.context
+    }
 }

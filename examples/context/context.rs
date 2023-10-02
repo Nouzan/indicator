@@ -36,8 +36,8 @@ where
 fn main() -> anyhow::Result<()> {
     let op = output_with(ma)
         .inspect(|value| {
-            println!("input: {}", value.value);
-            if let Some(AddTwo(x)) = value.context.env().get::<AddTwo<Decimal>>() {
+            println!("input: {}", value.value());
+            if let Some(AddTwo(x)) = value.context().env().get::<AddTwo<Decimal>>() {
                 println!("AddTwo: {x}");
             }
         })

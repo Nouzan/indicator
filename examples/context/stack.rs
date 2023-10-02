@@ -39,7 +39,7 @@ fn main() -> anyhow::Result<()> {
     let op = output(|_, ctx| ctx.env().get::<Ma<Decimal, 0>>().copied().unwrap())
         .with(ma_stack::<_, _, 0>(dec!(0.3)))
         .inspect(|v| {
-            let v = v.context.env().get::<Ma<Decimal, 1>>().unwrap();
+            let v = v.context().env().get::<Ma<Decimal, 1>>().unwrap();
             println!("ma1: {}", v.0);
         })
         .with(ma_stack::<_, _, 1>(dec!(0.5)))

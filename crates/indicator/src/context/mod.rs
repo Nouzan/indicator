@@ -19,7 +19,7 @@ use self::{
     layer::{
         cache::CacheOperator,
         data::AddDataOperator,
-        insert::{InsertDataOperator, InsertOperator},
+        insert::{InsertDataOperator, InsertOperator, InsertWithDataOperator},
         inspect::InspectOperator,
     },
 };
@@ -29,7 +29,7 @@ pub use self::{
     layer::{
         cache::Cache,
         data::AddData,
-        insert::{Insert, InsertData},
+        insert::{Insert, InsertData, InsertWithData},
         inspect::Inspect,
         layer_fn, Layer,
     },
@@ -120,6 +120,18 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
         Self: Sized,
     {
         self.with(InsertData(f))
+    }
+
+    /// Add a [`InsertWithData`] layer with the given [`RefOperator`] constructor.
+    /// (i.e. a function that returns a [`RefOperator`]).
+    fn insert_with_data<R, Env, Data>(self, f: impl Fn() -> R) -> InsertWithDataOperator<Self, R>
+    where
+        R: for<'a> RefOperator<'a, In, Output = (Env, Option<Data>)>,
+        Env: Send + Sync + 'static,
+        Data: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(InsertWithData(f))
     }
 
     /// Add an inspect layer with the given closure.

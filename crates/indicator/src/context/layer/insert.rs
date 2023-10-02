@@ -96,6 +96,56 @@ where
     }
 }
 
+/// Layer that inserts values into the env and data context at the same time.
+/// with a [`RefOperator`].
+pub struct InsertWithData<F>(pub F);
+
+impl<T, P, R, Env, Data, F> Layer<T, P> for InsertWithData<F>
+where
+    P: ContextOperator<T>,
+    F: Fn() -> R,
+    R: for<'a> RefOperator<'a, T, Output = (Env, Option<Data>)>,
+    Env: Send + Sync + 'static,
+    Data: Send + Sync + 'static,
+{
+    type Operator = InsertWithDataOperator<P, R>;
+    type Out = P::Out;
+
+    #[inline]
+    fn layer(&self, operator: P) -> Self::Operator {
+        InsertWithDataOperator {
+            inner: operator,
+            insert: (self.0)(),
+        }
+    }
+}
+
+/// Operator that inserts a value into the data context.
+pub struct InsertWithDataOperator<P, R> {
+    inner: P,
+    insert: R,
+}
+
+impl<T, P, R, Env, Data> Operator<Value<T>> for InsertWithDataOperator<P, R>
+where
+    P: ContextOperator<T>,
+    R: for<'a> RefOperator<'a, T, Output = (Env, Option<Data>)>,
+    Env: Send + Sync + 'static,
+    Data: Send + Sync + 'static,
+{
+    type Output = Value<P::Out>;
+
+    #[inline]
+    fn next(&mut self, mut input: Value<T>) -> Self::Output {
+        let (env, data) = self.insert.next(input.as_ref());
+        input.context_mut().env_mut().insert(env);
+        if let Some(value) = data {
+            input.context_mut().data_mut().insert(value);
+        }
+        self.inner.next(input)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

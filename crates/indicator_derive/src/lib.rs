@@ -91,7 +91,7 @@ fn generate_operator(args: TokenStream, input: TokenStream) -> syn::Result<Token
         impl #impl_generics #indicator::context::RefOperator<'value, #input_type> for #name #type_generics #where_clause {
             type Output = #output;
 
-            fn next(&mut self, input: #indicator::context::ValueRef<'value, #input_type>) -> Self::Output {
+            fn next(&mut self, __input: #indicator::context::ValueRef<'value, #input_type>) -> Self::Output {
                 #(#extractors)*
                 #(#stmts)*
             }
@@ -112,7 +112,7 @@ fn parse_extractor(arg: &PatType) -> syn::Result<TokenStream2> {
     let indicator = indicator();
     let PatType { pat, ty, .. } = arg;
     Ok(quote! {
-        let #pat: #ty = #indicator::context::extractor::FromValueRef::from_value_ref(&input);
+        let #pat: #ty = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
     })
 }
 

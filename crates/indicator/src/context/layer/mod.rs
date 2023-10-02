@@ -1,6 +1,8 @@
 use self::stack::Stack;
 
-use super::{AddData, ContextOperator, Insert, InsertData, Inspect, RefOperator, ValueRef};
+use super::{
+    AddData, ContextOperator, Insert, InsertData, InsertWithData, Inspect, RefOperator, ValueRef,
+};
 
 /// Layer that caches the final context,
 /// and provides it to the next evaluation.
@@ -95,6 +97,19 @@ where
         Self: Sized,
     {
         self.with(InsertData(f))
+    }
+
+    /// Add a [`InsertWithData`] layer with the given [`RefOperator`] constructor.
+    /// (i.e. a function that returns a [`RefOperator`]).
+    fn insert_with_data<R, Env, Data, F>(self, f: F) -> Stack<Self, InsertWithData<F>>
+    where
+        F: Fn() -> R,
+        R: for<'a> RefOperator<'a, In, Output = (Env, Option<Data>)>,
+        Env: Send + Sync + 'static,
+        Data: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(InsertWithData(f))
     }
 
     /// Add an inspect layer with the given closure.

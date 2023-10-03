@@ -1,3 +1,4 @@
+use core::borrow::Borrow;
 use core::ops::Deref;
 
 use super::tick::Tick;
@@ -76,6 +77,12 @@ impl<T> Deref for TickValue<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl<T> Borrow<T> for TickValue<T> {
+    fn borrow(&self) -> &T {
         &self.value
     }
 }

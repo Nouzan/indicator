@@ -6,7 +6,7 @@ use rust_decimal_macros::dec;
 struct AddTwo<T>(T);
 
 /// An operator that just add two to the input.
-#[operator(T)]
+#[operator(input = T)]
 fn add_two<T>(In(value): In<&T>) -> AddTwo<T>
 where
     T: Num + Clone,
@@ -22,7 +22,7 @@ struct Ma<T>(T);
 
 /// An operator that does the following:
 /// `x => (x + prev(x)) / 2`
-#[operator(T)]
+#[operator(input = T)]
 fn ma<T>(Env(AddTwo(x)): Env<&AddTwo<T>>, Prev(prev): Prev<&Ma<T>>) -> Ma<T>
 where
     T: Num + Clone,

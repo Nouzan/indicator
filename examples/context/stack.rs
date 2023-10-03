@@ -21,7 +21,7 @@ struct Alpha<T, const N: usize>(T);
 #[derive(Clone, Copy)]
 struct Ma<T, const N: usize>(T);
 
-#[operator(T)]
+#[operator(input = T)]
 fn ma<T, const N: usize>(
     In(x): In<&T>,
     Prev(prev): Prev<&Ma<T, N>>,

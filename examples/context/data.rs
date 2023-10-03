@@ -2,14 +2,20 @@ use indicator::{prelude::*, IndicatorIteratorExt};
 
 struct Count(usize);
 
+impl From<usize> for Count {
+    fn from(value: usize) -> Self {
+        Self(value)
+    }
+}
+
 /// Odds counter.
-#[operator(i32)]
-fn odds_counter(In(value): In<&i32>, Data(count): Data<Option<&Count>>) -> Option<Count> {
+#[operator(input = i32, generate_data)]
+fn odds_counter(In(value): In<&i32>, Data(count): Data<Option<&Count>>) -> Option<usize> {
     let count = count.map(|c| c.0).unwrap_or(0);
     if *value % 2 == 1 {
-        Some(Count(count + 1))
+        Some(count + 1)
     } else if count == 0 {
-        Some(Count(0))
+        Some(0)
     } else {
         None
     }
@@ -17,17 +23,23 @@ fn odds_counter(In(value): In<&i32>, Data(count): Data<Option<&Count>>) -> Optio
 
 struct EvenCount(usize);
 
+impl From<usize> for EvenCount {
+    fn from(value: usize) -> Self {
+        Self(value)
+    }
+}
+
 /// Even signal.
-#[operator(i32)]
+#[operator(input = i32, generate_out_with_data)]
 fn even_signal(
     In(input): In<&i32>,
     Data(count): Data<Option<&EvenCount>>,
-) -> (bool, Option<EvenCount>) {
+) -> (bool, Option<usize>) {
     let count = count.map(|c| c.0).unwrap_or(0);
     if *input % 2 == 0 {
-        (true, Some(EvenCount(count + 1)))
+        (true, Some(count + 1))
     } else {
-        (false, if count == 0 { Some(EvenCount(0)) } else { None })
+        (false, if count == 0 { Some(0) } else { None })
     }
 }
 
@@ -45,8 +57,8 @@ fn main() -> anyhow::Result<()> {
         })
         .from_context::<&str>() // Asserting that the context has a `&str` data.
         .provide("This is my data!")
-        .insert_data(odds_counter)
-        .insert_with_data(even_signal)
+        .insert_data(odds_counter::<Count>)
+        .insert_with_data(even_signal::<bool, EvenCount>)
         .cache(1)
         .finish();
     let data = [1, 2, 3];

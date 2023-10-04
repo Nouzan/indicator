@@ -3,8 +3,8 @@ use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::{
-    punctuated::Punctuated, FnArg, GenericParam, Ident, ItemFn, Lifetime, LifetimeParam, PatType,
-    ReturnType, Token, Type, Visibility,
+    punctuated::Punctuated, FnArg, GenericParam, Ident, ItemFn, Lifetime, LifetimeParam, Meta,
+    PatType, ReturnType, Token, Type, Visibility,
 };
 
 use self::args::{GenerateOut, OperatorArgs};
@@ -23,8 +23,8 @@ pub(super) fn generate_operator(
     let args = syn::parse::<OperatorArgs>(args)?;
     let mut next = syn::parse::<ItemFn>(input)?;
 
-    let next_fn = generate_next_fn(&next)?;
-    signature::expand(&mut next.sig, &args)?;
+    let unattributed = signature::expand(&mut next, &args)?;
+    let next_fn = generate_next_fn(&unattributed)?;
 
     // Documentations.
     let docs = next
@@ -73,28 +73,34 @@ pub(super) fn generate_operator(
     let indicator = indicator();
     let vis = &next.vis;
     let input_type = &args.input_type;
+    let unattributed_type_generics = if unattributed.sig.generics.params.is_empty() {
+        quote!()
+    } else {
+        let (_, type_generics, _) = unattributed.sig.generics.split_for_impl();
+        quote!(::#type_generics)
+    };
     let return_stmt = match args.generate_out {
         Some(GenerateOut::Out) => {
             quote! {
-                __next(#extractors).into()
+                __next #unattributed_type_generics (#extractors).into()
             }
         }
         Some(GenerateOut::Data) => {
             quote! {
-                __next(#extractors).map(Into::into)
+                __next #unattributed_type_generics  (#extractors).map(Into::into)
             }
         }
         Some(GenerateOut::WithData) => {
             quote! {
                 {
-                    let (__out, __data) = __next(#extractors);
+                    let (__out, __data) = __next #unattributed_type_generics  (#extractors);
                     (__out.into(), __data.map(Into::into))
                 }
             }
         }
         None => {
             quote! {
-                __next(#extractors)
+                __next #unattributed_type_generics (#extractors)
             }
         }
     };
@@ -130,13 +136,33 @@ fn generate_next_fn(next: &ItemFn) -> syn::Result<TokenStream2> {
 
 fn parse_extractor(arg: &PatType) -> syn::Result<TokenStream2> {
     let indicator = indicator();
-    let PatType { ty, .. } = arg;
-    Ok(quote! {
-        {
-            let __a: #ty = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
-            __a
+    let PatType { ty, attrs, pat, .. } = arg;
+    let expanded = if let Some(attr) = attrs.first() {
+        let Meta::List(attr) = &attr.meta else {
+            unreachable!("must be meta list");
+        };
+        let kind = attr.path.get_ident().unwrap();
+        let name: Ident = syn::parse2(attr.tokens.clone()).unwrap();
+        let rt = match kind.to_string().as_str() {
+            "borrow" => quote!(core::borrow::Borrow::borrow(#name)),
+            "as_ref" => quote!(core::convert::AsRef::as_ref(#name)),
+            _ => unreachable!(),
+        };
+        quote! {
+            {
+                let #pat: #ty = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
+                #rt
+            }
         }
-    })
+    } else {
+        quote! {
+            {
+                let __a: #ty = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
+                __a
+            }
+        }
+    };
+    Ok(expanded)
 }
 
 fn generate_struct_def(

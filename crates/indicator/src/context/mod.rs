@@ -26,6 +26,7 @@ use self::{
 
 pub use self::{
     anymap::Context,
+    extractor::{Data, Env, In, Prev},
     layer::{
         cache::Cache,
         data::AddData,

@@ -20,6 +20,7 @@ anyhow = "1.0.75"
 rust_decimal.workspace = true
 rust_decimal_macros.workspace = true
 num = "0.4.1"
+derive_more = { version = "0.99.11", features = ["as_ref", "from"] }
 
 [[example]]
 name = "context"
@@ -34,4 +35,9 @@ required-features = ["context"]
 [[example]]
 name = "stack"
 path = "context/stack.rs"
+required-features = ["context"]
+
+[[example]]
+name = "stack_sugar"
+path = "context/stack_sugar.rs"
 required-features = ["context"]

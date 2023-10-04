@@ -2,20 +2,14 @@ use indicator::{prelude::*, IndicatorIteratorExt};
 
 struct Count(usize);
 
-impl From<usize> for Count {
-    fn from(value: usize) -> Self {
-        Self(value)
-    }
-}
-
 /// Odds counter.
-#[operator(input = i32, generate_data)]
-fn odds_counter(In(value): In<&i32>, Data(count): Data<Option<&Count>>) -> Option<usize> {
+#[operator(input = i32)]
+fn odds_counter(In(value): In<&i32>, Data(count): Data<Option<&EvenCount>>) -> Option<Count> {
     let count = count.map(|c| c.0).unwrap_or(0);
     if *value % 2 == 1 {
-        Some(count + 1)
+        Some(Count(count + 1))
     } else if count == 0 {
-        Some(0)
+        Some(Count(0))
     } else {
         None
     }
@@ -57,7 +51,7 @@ fn main() -> anyhow::Result<()> {
         })
         .from_context::<&str>() // Asserting that the context has a `&str` data.
         .provide("This is my data!")
-        .insert_data(odds_counter::<Count>)
+        .insert_data(odds_counter)
         .insert_with_data(even_signal::<bool, EvenCount>)
         .cache(1)
         .finish();

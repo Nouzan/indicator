@@ -1,5 +1,5 @@
 use convert_case::{Case, Casing};
-use proc_macro2::Ident;
+use proc_macro2::{Ident, TokenStream};
 use syn::{
     parse::{Parse, ParseStream},
     parse_quote,
@@ -99,8 +99,56 @@ type Optional = bool;
 
 pub(super) enum Extractor {
     Plain(Box<Type>),
-    Borrow(FnArg, Optional),
-    AsRef(FnArg, Optional),
+    Borrow(Ident, FnArg, Optional),
+    AsRef(Ident, FnArg, Optional),
+}
+
+impl Extractor {
+    pub(super) fn expand(&self) -> TokenStream {
+        let indicator = indicator();
+        match self {
+            Self::Plain(ty) => {
+                quote! {
+                    {
+                        let __a: #ty = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
+                        __a
+                    }
+                }
+            }
+            Self::Borrow(name, arg, false) => {
+                quote! {
+                    {
+                        let #arg = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
+                        core::borrow::Borrow::borrow(#name)
+                    }
+                }
+            }
+            Self::Borrow(name, arg, true) => {
+                quote! {
+                    {
+                        let #arg = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
+                        #name.map(core::borrow::Borrow::borrow)
+                    }
+                }
+            }
+            Self::AsRef(name, arg, false) => {
+                quote! {
+                    {
+                        let #arg = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
+                        core::convert::AsRef::as_ref(#name)
+                    }
+                }
+            }
+            Self::AsRef(name, arg, true) => {
+                quote! {
+                    {
+                        let #arg = #indicator::context::extractor::FromValueRef::from_value_ref(&__input);
+                        #name.map(core::convert::AsRef::as_ref)
+                    }
+                }
+            }
+        }
+    }
 }
 
 struct ExtractorWithGenerics {
@@ -124,10 +172,10 @@ impl ExtractorWithGenerics {
                         if way.is_borrow() {
                             generics
                                 .push(syn::parse2(quote!(#ty: core::borrow::Borrow<#target_ty>))?);
-                            Extractor::Borrow(pat, false)
+                            Extractor::Borrow(name, pat, false)
                         } else {
                             generics.push(syn::parse2(quote!(#ty: AsRef<#target_ty>))?);
-                            Extractor::AsRef(pat, false)
+                            Extractor::AsRef(name, pat, false)
                         }
                     }
                     Attr::Env(way, false) => {
@@ -138,12 +186,12 @@ impl ExtractorWithGenerics {
                         let pat = parse_quote!(#indicator::context::Env(#name): #indicator::context::Env<&#ty>);
                         if way.is_borrow() {
                             generics.push(syn::parse2(quote!(#ty: core::borrow::Borrow<#target_ty> + Send + Sync + 'static))?);
-                            Extractor::Borrow(pat, false)
+                            Extractor::Borrow(name, pat, false)
                         } else {
                             generics.push(syn::parse2(
                                 quote!(#ty: AsRef<#target_ty> + Send + Sync + 'static),
                             )?);
-                            Extractor::AsRef(pat, false)
+                            Extractor::AsRef(name, pat, false)
                         }
                     }
                     Attr::Env(way, true) => {
@@ -155,12 +203,12 @@ impl ExtractorWithGenerics {
                         let pat = parse_quote!(#indicator::context::Env(#name): #indicator::context::Env<Option<&#ty>>);
                         if way.is_borrow() {
                             generics.push(syn::parse2(quote!(#ty: core::borrow::Borrow<#target_ty> + Send + Sync + 'static))?);
-                            Extractor::Borrow(pat, true)
+                            Extractor::Borrow(name, pat, true)
                         } else {
                             generics.push(syn::parse2(
                                 quote!(#ty: AsRef<#target_ty> + Send + Sync + 'static),
                             )?);
-                            Extractor::AsRef(pat, true)
+                            Extractor::AsRef(name, pat, true)
                         }
                     }
                     Attr::Data(way, false) => {
@@ -171,12 +219,12 @@ impl ExtractorWithGenerics {
                         let pat = parse_quote!(#indicator::context::Data(#name): #indicator::context::Data<&#ty>);
                         if way.is_borrow() {
                             generics.push(syn::parse2(quote!(#ty: core::borrow::Borrow<#target_ty> + Send + Sync + 'static))?);
-                            Extractor::Borrow(pat, false)
+                            Extractor::Borrow(name, pat, false)
                         } else {
                             generics.push(syn::parse2(
                                 quote!(#ty: AsRef<#target_ty> + Send + Sync + 'static),
                             )?);
-                            Extractor::AsRef(pat, false)
+                            Extractor::AsRef(name, pat, false)
                         }
                     }
                     Attr::Data(way, true) => {
@@ -188,12 +236,12 @@ impl ExtractorWithGenerics {
                         let pat = parse_quote!(#indicator::context::Data(#name): #indicator::context::Data<Option<&#ty>>);
                         if way.is_borrow() {
                             generics.push(syn::parse2(quote!(#ty: core::borrow::Borrow<#target_ty> + Send + Sync + 'static))?);
-                            Extractor::Borrow(pat, true)
+                            Extractor::Borrow(name, pat, true)
                         } else {
                             generics.push(syn::parse2(
                                 quote!(#ty: AsRef<#target_ty> + Send + Sync + 'static),
                             )?);
-                            Extractor::AsRef(pat, true)
+                            Extractor::AsRef(name, pat, true)
                         }
                     }
                     Attr::Prev(way) => {
@@ -205,12 +253,12 @@ impl ExtractorWithGenerics {
                         let pat = parse_quote!(#indicator::context::Prev(#name): #indicator::context::Prev<&#ty>);
                         if way.is_borrow() {
                             generics.push(syn::parse2(quote!(#ty: core::borrow::Borrow<#target_ty> + Send + Sync + 'static))?);
-                            Extractor::Borrow(pat, true)
+                            Extractor::Borrow(name, pat, true)
                         } else {
                             generics.push(syn::parse2(
                                 quote!(#ty: AsRef<#target_ty> + Send + Sync + 'static),
                             )?);
-                            Extractor::AsRef(pat, true)
+                            Extractor::AsRef(name, pat, true)
                         }
                     }
                 }

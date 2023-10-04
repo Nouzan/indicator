@@ -10,6 +10,7 @@ pub(crate) struct OperatorArgs {
     pub(crate) generate_out: Option<GenerateOut>,
 }
 
+#[derive(Clone, Copy)]
 pub(crate) enum GenerateOut {
     Out,
     WithData,

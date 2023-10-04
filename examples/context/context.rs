@@ -20,16 +20,10 @@ where
 #[derive(Clone)]
 struct Ma<T>(T);
 
-impl<T> core::borrow::Borrow<T> for Ma<T> {
-    fn borrow(&self) -> &T {
-        &self.0
-    }
-}
-
 /// An operator that does the following:
 /// `x => (x + prev(x)) / 2`
-#[operator(input = I)]
-fn ma<I, T>(#[env] x: &T, Prev(prev): Prev<&Ma<T>>) -> Ma<T>
+#[operator(input = T)]
+fn ma<T>(Env(x): Env<&T>, Prev(prev): Prev<&Ma<T>>) -> Ma<T>
 where
     T: Num + Clone,
     T: Send + Sync + 'static,
@@ -40,7 +34,7 @@ where
 }
 
 fn main() -> anyhow::Result<()> {
-    let op = output_with(ma::<Decimal, Decimal, Ma<_>>)
+    let op = output_with(ma)
         .inspect(|value| {
             println!("input: {}", value.value());
             if let Some(AddTwo(x)) = value.context().env().get::<AddTwo<Decimal>>() {

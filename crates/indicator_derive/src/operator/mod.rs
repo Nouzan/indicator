@@ -7,7 +7,10 @@ use syn::{
     PatType, ReturnType, Token, Type, Visibility,
 };
 
-use self::args::{GenerateOut, OperatorArgs};
+use self::{
+    args::{GenerateOut, OperatorArgs},
+    operator_fn::OperatorFn,
+};
 use super::indicator;
 
 /// Arguments for generating operator.
@@ -16,11 +19,20 @@ mod args;
 /// Expand the signature.
 mod signature;
 
+/// Operator Fn.
+mod operator_fn;
+
+mod utils;
+
+/// Extractor.
+mod extractor;
+
 pub(super) fn generate_operator(
     args: TokenStream,
     input: TokenStream,
 ) -> syn::Result<TokenStream2> {
     let args = syn::parse::<OperatorArgs>(args)?;
+    let op_fn = OperatorFn::parse_with(input.clone().into(), &args)?;
     let mut next = syn::parse::<ItemFn>(input)?;
 
     let unattributed = signature::expand(&mut next, &args)?;

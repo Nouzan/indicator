@@ -77,7 +77,9 @@ where
 
     /// Add a [`Insert`] layer with the given [`RefOperator`] constructor
     /// (i.e. a function that returns a [`RefOperator`]).
-    fn insert<R, Out, F>(self, f: F) -> Stack<Self, Insert<F>>
+    ///
+    /// We use this method to add the output of the operator to the `env` context.
+    fn insert_env<R, Out, F>(self, f: F) -> Stack<Self, Insert<F>>
     where
         F: Fn() -> R,
         R: for<'a> RefOperator<'a, In, Output = Out>,
@@ -89,6 +91,8 @@ where
 
     /// Add a [`InsertData`] layer with the given [`RefOperator`] constructor.
     /// (i.e. a function that returns a [`RefOperator`]).
+    ///
+    /// We use this method to add the output of the operator to the `data` context.
     fn insert_data<R, Out, F>(self, f: F) -> Stack<Self, InsertData<F>>
     where
         F: Fn() -> R,
@@ -101,7 +105,9 @@ where
 
     /// Add a [`InsertWithData`] layer with the given [`RefOperator`] constructor.
     /// (i.e. a function that returns a [`RefOperator`]).
-    fn insert_with_data<R, Env, Data, F>(self, f: F) -> Stack<Self, InsertWithData<F>>
+    ///
+    /// We use this method to add the output of the operator to the `env` and `data` context simultaneously.
+    fn insert<R, Env, Data, F>(self, f: F) -> Stack<Self, InsertWithData<F>>
     where
         F: Fn() -> R,
         R: for<'a> RefOperator<'a, In, Output = (Env, Option<Data>)>,

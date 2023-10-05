@@ -178,7 +178,7 @@ impl OperatorFn {
         match self.out {
             Some(GenerateOut::Out) => {
                 quote! {
-                    #call_name (#extractors).into()
+                    ((#call_name (#extractors)).into(), None)
                 }
             }
             Some(GenerateOut::Data) => {
@@ -226,7 +226,7 @@ impl OutputTy {
         match options.generate_out {
             Some(GenerateOut::Out) => {
                 generics.push(syn::parse2(quote!(OutTy: From<#ty>))?);
-                ty = syn::parse2(quote!(OutTy))?;
+                ty = syn::parse2(quote!((OutTy, Option<()>)))?;
             }
             Some(GenerateOut::Data) => {
                 let data_ty = get_type_inside_option(&ty)?;

@@ -52,7 +52,7 @@ fn main() -> anyhow::Result<()> {
         .from_context::<&str>() // Asserting that the context has a `&str` data.
         .provide("This is my data!")
         .insert_data(odds_counter)
-        .insert_with_data(even_signal::<bool, EvenCount>)
+        .insert(even_signal::<bool, EvenCount>)
         .cache(1)
         .finish();
     let data = [1, 2, 3];

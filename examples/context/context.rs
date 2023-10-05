@@ -23,14 +23,14 @@ struct Ma<T>(T);
 /// An operator that does the following:
 /// `x => (x + prev(x)) / 2`
 #[operator(input = T)]
-fn ma<T>(Env(x): Env<&T>, Prev(prev): Prev<&Ma<T>>) -> Ma<T>
+fn ma<T>(Env(x): Env<&AddTwo<T>>, Prev(prev): Prev<&Ma<T>>) -> Ma<T>
 where
     T: Num + Clone,
     T: Send + Sync + 'static,
 {
     let two = T::one() + T::one();
     let prev = prev.map(|v| v.0.clone()).unwrap_or(T::zero());
-    Ma((x.clone() + prev) / two)
+    Ma((x.0.clone() + prev) / two)
 }
 
 fn main() -> anyhow::Result<()> {
@@ -41,7 +41,7 @@ fn main() -> anyhow::Result<()> {
                 println!("AddTwo: {x}");
             }
         })
-        .insert(add_two)
+        .insert_env(add_two)
         .cache(1)
         .finish();
     let data = [dec!(1), dec!(2), dec!(3)];

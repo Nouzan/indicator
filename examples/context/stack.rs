@@ -11,7 +11,9 @@ where
     T: Num + Clone,
     P: ContextOperator<T>,
 {
-    id_layer().insert(ma::<_, N>).provide(Alpha::<_, N>(alhpa))
+    id_layer()
+        .insert_env(ma::<_, N>)
+        .provide(Alpha::<_, N>(alhpa))
 }
 
 /// Config for `ma` operator.

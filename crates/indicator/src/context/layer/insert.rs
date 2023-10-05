@@ -150,7 +150,9 @@ where
 mod tests {
     use super::*;
     use crate::{
-        context::{layer::cache::Cache, output, output_with, ContextOperatorExt, ValueRef},
+        context::{
+            insert_env_and_output, layer::cache::Cache, output, ContextOperatorExt, ValueRef,
+        },
         IndicatorIteratorExt,
     };
 
@@ -179,7 +181,7 @@ mod tests {
             }
         }
 
-        let op = output_with(|| Bar)
+        let op = insert_env_and_output(|| Bar)
             .with(Insert(|| Foo))
             .with(Cache::with_length(1.try_into().unwrap()))
             .finish();

@@ -144,7 +144,7 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
     /// Add an inspect layer with the given closure.
     fn inspect<F>(self, f: F) -> InspectOperator<Self, F>
     where
-        F: Fn(ValueRef<'_, In>) + Clone,
+        F: Fn(&In, &Context) + Clone,
         Self: Sized,
     {
         self.with(Inspect(f))

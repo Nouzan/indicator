@@ -39,14 +39,14 @@ fn even_signal(
 
 fn main() -> anyhow::Result<()> {
     let op = output(|_, ctx| ctx.env().get::<bool>().copied().unwrap())
-        .inspect(|value| {
-            println!("input: {}", value.value());
-            if let Some(data) = value.context().data().get::<&str>() {
+        .inspect(|value, context| {
+            println!("input: {}", value);
+            if let Some(data) = context.data().get::<&str>() {
                 println!("data: {}", data);
             }
-            let count = value.context().data().get::<Count>().unwrap();
+            let count = context.data().get::<Count>().unwrap();
             println!("odds count: {}", count.0);
-            let count = value.context().data().get::<EvenCount>().unwrap();
+            let count = context.data().get::<EvenCount>().unwrap();
             println!("even count: {}", count.0);
         })
         .from_context::<&str>() // Asserting that the context has a `&str` data.

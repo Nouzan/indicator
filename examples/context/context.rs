@@ -35,9 +35,9 @@ where
 
 fn main() -> anyhow::Result<()> {
     let op = insert_env_and_output(ma)
-        .inspect(|value| {
-            println!("input: {}", value.value());
-            if let Some(AddTwo(x)) = value.context().env().get::<AddTwo<Decimal>>() {
+        .inspect(|value, context| {
+            println!("input: {}", value);
+            if let Some(AddTwo(x)) = context.env().get::<AddTwo<Decimal>>() {
                 println!("AddTwo: {x}");
             }
         })

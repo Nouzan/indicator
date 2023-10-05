@@ -1,7 +1,7 @@
 use self::stack::Stack;
 
 use super::{
-    AddData, ContextOperator, Insert, InsertData, InsertWithData, Inspect, RefOperator, ValueRef,
+    AddData, Context, ContextOperator, Insert, InsertData, InsertWithData, Inspect, RefOperator,
 };
 
 /// Layer that caches the final context,
@@ -121,7 +121,7 @@ where
     /// Add an inspect layer with the given closure.
     fn inspect<F>(self, f: F) -> Stack<Self, Inspect<F>>
     where
-        F: Fn(ValueRef<'_, In>) + Clone,
+        F: Fn(&In, &Context) + Clone,
         Self: Sized,
     {
         self.with(Inspect(f))

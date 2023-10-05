@@ -34,7 +34,7 @@ pub use self::{
         inspect::Inspect,
         layer_fn, Layer,
     },
-    output::{insert_env_and_output, output},
+    output::{insert_and_output, insert_env_and_output, output},
     value::{input, Value, ValueRef},
 };
 

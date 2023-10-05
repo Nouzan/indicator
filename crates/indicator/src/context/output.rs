@@ -24,9 +24,9 @@ pub fn output<I, O>(
 }
 
 /// An output operator that insert the output into the context.
-pub struct OutputWith<R>(R);
+pub struct InsertEnvAndOutput<R>(R);
 
-impl<T, R, Out> Operator<Value<T>> for OutputWith<R>
+impl<T, R, Out> Operator<Value<T>> for InsertEnvAndOutput<R>
 where
     R: for<'a> RefOperator<'a, T, Output = Out>,
     Out: Clone + Send + Sync + 'static,
@@ -42,11 +42,11 @@ where
 }
 
 /// Create an output operator that insert the output into the context.
-pub fn output_with<I, O, R, F>(operator: F) -> OutputWith<R>
+pub fn insert_env_and_output<I, O, R, F>(operator: F) -> InsertEnvAndOutput<R>
 where
     R: for<'a> RefOperator<'a, I, Output = O>,
     O: Clone + Send + Sync + 'static,
     F: FnOnce() -> R,
 {
-    OutputWith(operator())
+    InsertEnvAndOutput(operator())
 }

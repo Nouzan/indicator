@@ -103,7 +103,9 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
 
     /// Add a [`Insert`] layer with the given [`RefOperator`] constructor
     /// (i.e. a function that returns a [`RefOperator`]).
-    fn insert<R, Out>(self, f: impl Fn() -> R) -> InsertOperator<Self, R>
+    ///
+    /// We use this method to add the output of the operator to the `env` context.
+    fn insert_env<R, Out>(self, f: impl Fn() -> R) -> InsertOperator<Self, R>
     where
         R: for<'a> RefOperator<'a, In, Output = Out>,
         Out: Send + Sync + 'static,
@@ -114,6 +116,8 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
 
     /// Add a [`InsertData`] layer with the given [`RefOperator`] constructor.
     /// (i.e. a function that returns a [`RefOperator`]).
+    ///
+    /// We use this method to add the output of the operator to the `data` context.
     fn insert_data<R, Out>(self, f: impl Fn() -> R) -> InsertDataOperator<Self, R>
     where
         R: for<'a> RefOperator<'a, In, Output = Option<Out>>,
@@ -125,7 +129,9 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
 
     /// Add a [`InsertWithData`] layer with the given [`RefOperator`] constructor.
     /// (i.e. a function that returns a [`RefOperator`]).
-    fn insert_with_data<R, Env, Data>(self, f: impl Fn() -> R) -> InsertWithDataOperator<Self, R>
+    ///
+    /// We use this method to add the output of the operator to the `env` and `data` context simultaneously.
+    fn insert<R, Env, Data>(self, f: impl Fn() -> R) -> InsertWithDataOperator<Self, R>
     where
         R: for<'a> RefOperator<'a, In, Output = (Env, Option<Data>)>,
         Env: Send + Sync + 'static,

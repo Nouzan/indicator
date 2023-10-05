@@ -105,6 +105,7 @@ pub mod prelude {
     #[cfg(feature = "context")]
     pub use crate::context::{
         extractor::{Data, Env, In, Prev},
+        input,
         layer::{layer_fn, stack::id_layer, Layer, LayerExt},
         output, output_with, ContextOperator, ContextOperatorExt, Value, ValueRef,
     };

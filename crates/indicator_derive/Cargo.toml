@@ -18,3 +18,7 @@ proc-macro2 = "1.0.67"
 quote = "1.0.33"
 syn = { version = "2.0.37", features = ["full"] }
 convert_case = "0.6.0"
+
+[dev-dependencies]
+indicator = { path = "../indicator", features = ["context"] }
+num = "0.4.1"

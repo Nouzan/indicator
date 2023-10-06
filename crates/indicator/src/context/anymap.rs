@@ -211,7 +211,7 @@ impl Context {
     }
 
     /// Get the data context mutably.
-    pub(crate) fn data_mut(&mut self) -> &mut Map {
+    pub fn data_mut(&mut self) -> &mut Map {
         &mut self.data
     }
 }

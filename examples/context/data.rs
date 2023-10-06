@@ -44,10 +44,12 @@ fn main() -> anyhow::Result<()> {
             if let Some(data) = context.data().get::<&str>() {
                 println!("data: {}", data);
             }
-            let count = context.data().get::<Count>().unwrap();
-            println!("odds count: {}", count.0);
-            let count = context.data().get::<EvenCount>().unwrap();
-            println!("even count: {}", count.0);
+            if let Some(count) = context.data().get::<Count>() {
+                println!("previous odds count: {}", count.0);
+            }
+            if let Some(count) = context.data().get::<EvenCount>() {
+                println!("previous even count: {}", count.0);
+            }
         })
         .from_context::<&str>() // Asserting that the context has a `&str` data.
         .provide("This is my data!")

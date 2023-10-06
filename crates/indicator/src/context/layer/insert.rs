@@ -88,11 +88,14 @@ where
     type Output = Value<P::Out>;
 
     #[inline]
-    fn next(&mut self, mut input: Value<T>) -> Self::Output {
-        if let Some(value) = self.insert.next(input.as_ref()) {
-            input.context_mut().data_mut().insert(value);
+    fn next(&mut self, input: Value<T>) -> Self::Output {
+        let value = self.insert.next(input.as_ref());
+        let mut out = self.inner.next(input);
+        // We delay the insert after the inner operator is called.
+        if let Some(value) = value {
+            out.context_mut().data_mut().insert(value);
         }
-        self.inner.next(input)
+        out
     }
 }
 
@@ -138,11 +141,14 @@ where
     #[inline]
     fn next(&mut self, mut input: Value<T>) -> Self::Output {
         let (env, data) = self.insert.next(input.as_ref());
+        // We insert the env immediately.
         input.context_mut().env_mut().insert(env);
+        let mut out = self.inner.next(input);
+        // But delay the insert of the data.
         if let Some(value) = data {
-            input.context_mut().data_mut().insert(value);
+            out.context_mut().data_mut().insert(value);
         }
-        self.inner.next(input)
+        out
     }
 }
 
@@ -222,15 +228,16 @@ mod tests {
             }
         }
 
-        let op = output(|_, ctx| ctx.data().get::<usize>().copied().unwrap())
+        let op = output(|_, ctx| ctx.data().get::<usize>().copied())
             .with(InsertData(|| Counter))
             .with(Cache::with_length(1.try_into().unwrap()))
             .finish();
 
         let data = [1, 2, 3, 4, 5];
+        // Note that we only got the previous data because we inserted the data after the operator.
         assert_eq!(
             data.into_iter().indicator(op).collect::<Vec<_>>(),
-            [0, 1, 1, 2, 2]
+            [None, Some(0), Some(1), Some(1), Some(2)]
         );
     }
 }

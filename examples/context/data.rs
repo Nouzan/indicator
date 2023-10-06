@@ -55,6 +55,9 @@ fn main() -> anyhow::Result<()> {
         .provide("This is my data!")
         .insert_data(odds_counter)
         .insert(even_signal::<bool, EvenCount>)
+        // // Note that if we add an identical operator here, the result should still be correct.
+        // // Since the data updating is happended after the inner operator is applied.
+        // .insert(even_signal::<bool, EvenCount>)
         .cache(1)
         .finish();
     let data = [1, 2, 3];

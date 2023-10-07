@@ -13,6 +13,7 @@ pub mod layer;
 pub mod output;
 
 use crate::Operator;
+use alloc::boxed::Box;
 
 use self::{
     anymap::Map,
@@ -179,7 +180,10 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
     }
 
     /// Provide data to the context with the given data provider.
-    fn provide_with<D>(self, provider: impl Fn() -> Option<D> + 'static) -> AddDataOperator<D, Self>
+    fn provide_with<D>(
+        self,
+        provider: impl Fn() -> Option<D> + Send + Sync + 'static,
+    ) -> AddDataOperator<D, Self>
     where
         D: Send + Sync + 'static,
         Self: Sized,

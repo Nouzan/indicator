@@ -149,7 +149,10 @@ where
     }
 
     /// Provide data to the context with the given data provider.
-    fn provide_with<D>(self, provider: impl Fn() -> Option<D> + 'static) -> Stack<Self, AddData<D>>
+    fn provide_with<D>(
+        self,
+        provider: impl Fn() -> Option<D> + Send + Sync + 'static,
+    ) -> Stack<Self, AddData<D>>
     where
         D: Send + Sync + 'static,
         Self: Sized,

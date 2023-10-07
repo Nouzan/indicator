@@ -8,14 +8,14 @@ use crate::{
 use super::Layer;
 
 /// Layer that adds data to the context.
-pub struct AddData<T>(Box<dyn Fn() -> Option<T>>);
+pub struct AddData<T>(Box<dyn Fn() -> Option<T> + Send + Sync>);
 
 impl<T> AddData<T>
 where
     T: Send + Sync + 'static,
 {
     /// Create [`AddData`] layer with the given data provider.
-    pub fn new(provider: impl Fn() -> Option<T> + 'static) -> Self {
+    pub fn new(provider: impl Fn() -> Option<T> + Send + Sync + 'static) -> Self {
         Self(Box::new(provider))
     }
 

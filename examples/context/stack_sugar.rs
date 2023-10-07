@@ -20,15 +20,16 @@ where
 
 /// Define a stack for calculating moving average.
 // We use a const generic here to allow the stack to be reusable.
-fn ma_stack<T, P, const N: usize>(alhpa: T) -> impl Layer<T, P, Out = P::Out>
+fn ma_stack<T, P, const N: usize>(alhpa: T) -> BoxLayer<P, T, P::Out>
 where
     T: Send + Sync + 'static,
     T: Num + Clone,
-    P: ContextOperator<T>,
+    P: ContextOperator<T> + Send + 'static,
 {
     id_layer()
         .insert(ma::<T, T, Ma<_, N>, Alpha<_, N>, Ma<_, N>>)
         .provide(Alpha::<_, N>(alhpa))
+        .boxed()
 }
 
 /// Config for `ma` operator.

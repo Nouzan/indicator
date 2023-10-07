@@ -32,7 +32,7 @@ pub use self::{
         data::AddData,
         insert::{Insert, InsertData, InsertWithData},
         inspect::Inspect,
-        layer_fn, Layer,
+        layer_fn, BoxLayer, Layer,
     },
     output::{insert_and_output, insert_env_and_output, output},
     value::{input, Value, ValueRef},
@@ -60,8 +60,27 @@ where
     }
 }
 
+/// A boxed [`ContextOperator`].
+pub type BoxContextOperator<In, Out> = Box<dyn ContextOperator<In, Out = Out> + Send>;
+
+impl<In, Out> ContextOperator<In> for BoxContextOperator<In, Out> {
+    type Out = Out;
+
+    fn next(&mut self, input: Value<In>) -> Value<Self::Out> {
+        self.as_mut().next(input)
+    }
+}
+
 /// Extension trait for [`ContextOperator`].
 pub trait ContextOperatorExt<In>: ContextOperator<In> {
+    /// Create a boxed [`ContextOperator`].
+    fn boxed(self) -> BoxContextOperator<In, Self::Out>
+    where
+        Self: Send + Sized + 'static,
+    {
+        Box::new(self)
+    }
+
     /// Add a layer.
     fn with<L>(self, layer: L) -> L::Operator
     where

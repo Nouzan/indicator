@@ -1,7 +1,10 @@
+use alloc::sync::Arc;
+
 use self::stack::Stack;
 
 use super::{
-    AddData, Context, ContextOperator, Insert, InsertData, InsertWithData, Inspect, RefOperator,
+    AddData, BoxContextOperator, Context, ContextOperator, ContextOperatorExt, Insert, InsertData,
+    InsertWithData, Inspect, RefOperator,
 };
 
 /// Layer that caches the final context,
@@ -65,6 +68,15 @@ pub trait LayerExt<In, P>: Layer<In, P>
 where
     P: ContextOperator<In>,
 {
+    /// Create a boxed [`Layer`].
+    fn boxed(self) -> BoxLayer<P, In, Self::Out>
+    where
+        Self: Sized + Send + Sync + 'static,
+        Self::Operator: Send + 'static,
+    {
+        BoxLayer::new(self)
+    }
+
     /// Stack a outer layer on top of the inner layer.
     #[inline]
     fn with<Outer>(self, outer: Outer) -> Stack<Self, Outer>
@@ -160,4 +172,39 @@ where
     P: ContextOperator<In>,
     L: Layer<In, P>,
 {
+}
+
+/// A boxed [`Layer`].
+pub struct BoxLayer<P, In, Out> {
+    inner: Arc<
+        dyn Layer<In, P, Operator = BoxContextOperator<In, Out>, Out = Out> + Send + Sync + 'static,
+    >,
+}
+
+impl<P, In, Out> BoxLayer<P, In, Out> {
+    /// Create a boxed [`Layer`].
+    pub fn new<L>(inner: L) -> Self
+    where
+        P: ContextOperator<In>,
+        L: Layer<In, P, Out = Out> + Send + Sync + 'static,
+        L::Operator: Send + 'static,
+    {
+        let layer = layer_fn(move |op: P| inner.layer(op).boxed());
+        Self {
+            inner: Arc::new(layer),
+        }
+    }
+}
+
+impl<P, In, Out> Layer<In, P> for BoxLayer<P, In, Out>
+where
+    P: ContextOperator<In>,
+{
+    type Operator = BoxContextOperator<In, Out>;
+
+    type Out = Out;
+
+    fn layer(&self, operator: P) -> Self::Operator {
+        self.inner.layer(operator)
+    }
 }

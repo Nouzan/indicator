@@ -20,7 +20,7 @@ where
 
 /// Define a stack for calculating moving average.
 // We use a const generic here to allow the stack to be reusable.
-fn ma_stack<T, P, const N: usize>(alhpa: T) -> BoxLayer<P, T, P::Out>
+fn ma_stack<T, P, const N: usize>(alhpa: T) -> BoxLayer<P, T, Decimal>
 where
     T: Send + Sync + 'static,
     T: Num + Clone,
@@ -29,6 +29,8 @@ where
     id_layer()
         .insert(ma::<T, T, Ma<_, N>, Alpha<_, N>, Ma<_, N>>)
         .provide(Alpha::<_, N>(alhpa))
+        // Convert the final output to `Decimal`.
+        .then_with(|| |_, ctx| ctx.env().get::<Ma<Decimal, 0>>().copied().unwrap().0)
         .boxed()
 }
 
@@ -40,7 +42,7 @@ struct Alpha<T, const N: usize>(T);
 struct Ma<T, const N: usize>(T);
 
 fn main() -> anyhow::Result<()> {
-    let op = output(|_, ctx| ctx.env().get::<Ma<Decimal, 0>>().copied().unwrap())
+    let op = input()
         .with(ma_stack::<_, _, 0>(dec!(0.3)))
         .inspect(|_, ctx| {
             let v = ctx.env().get::<Ma<Decimal, 1>>().unwrap();
@@ -53,10 +55,7 @@ fn main() -> anyhow::Result<()> {
 
     let data = [dec!(1), dec!(2), dec!(3)];
     assert_eq!(
-        data.into_iter()
-            .indicator(op)
-            .map(|m| m.0)
-            .collect::<Vec<_>>(),
+        data.into_iter().indicator(op).collect::<Vec<_>>(),
         [dec!(1.0), dec!(1.3), dec!(1.81),]
     );
     Ok(())

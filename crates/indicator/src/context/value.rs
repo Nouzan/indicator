@@ -8,9 +8,9 @@ use super::{anymap::Map, Context};
 #[derive(Debug)]
 pub struct Value<T> {
     /// Inner value.
-    value: T,
+    pub(crate) value: T,
     /// Context.
-    context: Context,
+    pub(crate) context: Context,
 }
 
 impl<T> Value<T> {

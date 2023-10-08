@@ -22,6 +22,7 @@ use self::{
         data::AddDataOperator,
         insert::{InsertDataOperator, InsertOperator, InsertWithDataOperator},
         inspect::InspectOperator,
+        then::ThenOperator,
     },
 };
 
@@ -33,7 +34,9 @@ pub use self::{
         data::AddData,
         insert::{Insert, InsertData, InsertWithData},
         inspect::Inspect,
-        layer_fn, BoxLayer, Layer,
+        layer_fn,
+        then::Then,
+        BoxLayer, Layer,
     },
     output::{insert_and_output, insert_env_and_output, output},
     value::{input, Value, ValueRef},
@@ -198,6 +201,16 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
         Self: Sized,
     {
         self.with(AddData::<D>::from_context())
+    }
+
+    /// Add a closure that will be called when the inner operator is evaluated.
+    fn then_with<Out, F, Builder>(self, builder: Builder) -> ThenOperator<Self, F>
+    where
+        F: FnMut(Self::Out, &Context) -> Out + Clone,
+        Builder: Fn() -> F,
+        Self: Sized,
+    {
+        self.with(Then(builder))
     }
 }
 

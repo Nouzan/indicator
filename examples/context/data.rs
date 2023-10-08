@@ -41,6 +41,9 @@ fn main() -> anyhow::Result<()> {
     let op = output(|_, ctx| ctx.env().get::<bool>().copied().unwrap())
         .inspect(|value, context| {
             println!("input: {}", value);
+
+            // We will only get the previous data here.
+            // Because the data is updated after the inner operator is applied.
             if let Some(data) = context.data().get::<&str>() {
                 println!("data: {}", data);
             }
@@ -59,6 +62,19 @@ fn main() -> anyhow::Result<()> {
         // // Since the data updating is happended after the inner operator is applied.
         // .insert(even_signal::<bool, EvenCount>)
         .cache(1)
+        .then_with(|| {
+            |value, ctx| {
+                // We will get the current data here.
+                // Because `then_with` is applied after the inner operator is applied.
+                if let Some(count) = ctx.data().get::<Count>() {
+                    println!("current odds count: {}", count.0);
+                }
+                if let Some(count) = ctx.data().get::<EvenCount>() {
+                    println!("current even count: {}", count.0);
+                }
+                value
+            }
+        })
         .finish();
     let data = [1, 2, 3];
 

@@ -1,6 +1,6 @@
 use alloc::sync::Arc;
 
-use self::stack::Stack;
+use self::{stack::Stack, then::Then};
 
 use super::{
     AddData, BoxContextOperator, Context, ContextOperator, ContextOperatorExt, Insert, InsertData,
@@ -22,6 +22,9 @@ pub mod data;
 
 /// Stack of layers.
 pub mod stack;
+
+/// Then layer.
+pub mod then;
 
 /// Layer.
 /// Convert an [`ContextOperator`] to another [`ContextOperator`]
@@ -167,6 +170,16 @@ where
         Self: Sized,
     {
         self.with(AddData::<D>::from_context())
+    }
+
+    /// Add a closure that will be called after the operator is evaluated.
+    fn then_with<Out, F, Builder>(self, builder: Builder) -> Stack<Self, Then<Builder>>
+    where
+        Builder: Fn() -> F,
+        F: FnMut(Self::Out, &Context) -> Out + Clone,
+        Self: Sized,
+    {
+        self.with(Then(builder))
     }
 }
 

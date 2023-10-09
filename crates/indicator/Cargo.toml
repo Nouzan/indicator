@@ -8,6 +8,7 @@ description.workspace = true
 repository.workspace = true
 keywords.workspace = true
 rust-version.workspace = true
+readme = "../../README.md"
 
 [package.metadata.docs.rs]
 all-features = true

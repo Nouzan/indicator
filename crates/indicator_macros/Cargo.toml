@@ -1,5 +1,5 @@
 [package]
-name = "indicator_derive"
+name = "indicator_macros"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

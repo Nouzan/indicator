@@ -113,12 +113,12 @@ pub mod prelude {
     pub use crate::gat::*;
     pub use crate::operator::{BoxOperator, LocalBoxOperator, Operator, OperatorExt};
     pub use crate::window::{Period, Tick, TickValue, TumblingWindow};
-    #[cfg(feature = "indicator_derive")]
-    pub use indicator_derive::*;
+    #[cfg(feature = "indicator_macros")]
+    pub use indicator_macros::*;
 }
 
-#[cfg(feature = "indicator_derive")]
-pub use indicator_derive::*;
+#[cfg(feature = "indicator_macros")]
+pub use indicator_macros as macros;
 
 pub use iter::IndicatorIteratorExt;
 pub use operator::{facet, map, Operator, OperatorExt};

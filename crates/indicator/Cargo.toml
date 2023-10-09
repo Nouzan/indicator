@@ -30,7 +30,7 @@ serde = [
 gat = ["tinyvec"]
 async = ["futures", "pin-project-lite"]
 reactive = ["alloc", "futures", "pin-project-lite", "tracing"]
-context = ["hashbrown", "alloc", "indicator_derive"]
+context = ["hashbrown", "alloc", "indicator_macros"]
 
 # features that need `std`
 std = ["alloc", "time/std", "futures?/std", "thiserror", "tracing?/std"]
@@ -38,7 +38,7 @@ parallel = ["std", "rayon"]
 tower = ["std", "async", "tower-service"]
 send = []
 
-[dependencies.indicator_derive]
+[dependencies.indicator_macros]
 workspace = true
 optional = true
 

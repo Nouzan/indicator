@@ -1,0 +1,6 @@
+{
+    "tasks": {
+        "build": "wasm-pack build -d ./wasm/pkg -t deno ../ --features wasm",
+        "run": "deno task build && deno run -A main.ts"
+    }
+}

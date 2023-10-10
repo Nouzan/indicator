@@ -9,18 +9,24 @@ repository.workspace = true
 keywords.workspace = true
 rust-version.workspace = true
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [features]
 context = ["indicator/context"]
+wasm = ["wasm-bindgen", "context"]
 
 [dependencies]
 indicator = { path = "../crates/indicator", default-features = false }
+wasm-bindgen = { version = "0.2.87", optional = true }
+
+derive_more = { version = "0.99.11", features = ["as_ref", "from"] }
+num = "0.4.1"
 
 [dev-dependencies]
 anyhow = "1.0.75"
 rust_decimal.workspace = true
 rust_decimal_macros.workspace = true
-num = "0.4.1"
-derive_more = { version = "0.99.11", features = ["as_ref", "from"] }
 
 [[example]]
 name = "context"

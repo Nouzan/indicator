@@ -139,6 +139,22 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
         self.with(Insert(f))
     }
 
+    /// Optionally add a [`Insert`] layer with the given [`RefOperator`] constructor.
+    ///
+    /// See [`insert_env`] for more details.
+    fn insert_env_if<R, Out>(
+        self,
+        enable: bool,
+        f: impl Fn() -> R,
+    ) -> Either<InsertOperator<Self, R>, Self>
+    where
+        R: for<'a> RefOperator<'a, In, Output = Out>,
+        Out: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with_if(if enable { Some(Insert(f)) } else { None })
+    }
+
     /// Add a [`InsertData`] layer with the given [`RefOperator`] constructor.
     /// (i.e. a function that returns a [`RefOperator`]).
     ///
@@ -150,6 +166,22 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
         Self: Sized,
     {
         self.with(InsertData(f))
+    }
+
+    /// Optionally add a [`InsertData`] layer with the given [`RefOperator`] constructor.
+    ///
+    /// See [`insert_data`] for more details.
+    fn insert_data_if<R, Out>(
+        self,
+        enable: bool,
+        f: impl Fn() -> R,
+    ) -> Either<InsertDataOperator<Self, R>, Self>
+    where
+        R: for<'a> RefOperator<'a, In, Output = Option<Out>>,
+        Out: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with_if(if enable { Some(InsertData(f)) } else { None })
     }
 
     /// Add a [`InsertWithData`] layer with the given [`RefOperator`] constructor.
@@ -164,6 +196,27 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
         Self: Sized,
     {
         self.with(InsertWithData(f))
+    }
+
+    /// Optionally add a [`InsertWithData`] layer with the given [`RefOperator`] constructor.
+    ///
+    /// See [`insert`] for more details.
+    fn insert_if<R, Env, Data>(
+        self,
+        enable: bool,
+        f: impl Fn() -> R,
+    ) -> Either<InsertWithDataOperator<Self, R>, Self>
+    where
+        R: for<'a> RefOperator<'a, In, Output = (Env, Option<Data>)>,
+        Env: Send + Sync + 'static,
+        Data: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with_if(if enable {
+            Some(InsertWithData(f))
+        } else {
+            None
+        })
     }
 
     /// Add an inspect layer with the given closure.

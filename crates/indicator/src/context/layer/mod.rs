@@ -107,6 +107,19 @@ where
         self.with(Insert(f))
     }
 
+    /// Optionally add the [`Insert`] layer with the given [`RefOperator`] constructor.
+    ///
+    /// See [`insert_env`] for more details.
+    fn insert_env_if<R, Out, F>(self, enable: bool, f: F) -> Stack<Self, OptionalLayer<Insert<F>>>
+    where
+        F: Fn() -> R,
+        R: for<'a> RefOperator<'a, In, Output = Out>,
+        Out: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with_if(if enable { Some(Insert(f)) } else { None })
+    }
+
     /// Add a [`InsertData`] layer with the given [`RefOperator`] constructor.
     /// (i.e. a function that returns a [`RefOperator`]).
     ///
@@ -119,6 +132,23 @@ where
         Self: Sized,
     {
         self.with(InsertData(f))
+    }
+
+    /// Optionally add the [`InsertData`] layer with the given [`RefOperator`] constructor.
+    ///
+    /// See [`insert_data`] for more details.
+    fn insert_data_if<R, Out, F>(
+        self,
+        enable: bool,
+        f: F,
+    ) -> Stack<Self, OptionalLayer<InsertData<F>>>
+    where
+        F: Fn() -> R,
+        R: for<'a> RefOperator<'a, In, Output = Option<Out>>,
+        Out: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with_if(if enable { Some(InsertData(f)) } else { None })
     }
 
     /// Add a [`InsertWithData`] layer with the given [`RefOperator`] constructor.
@@ -134,6 +164,28 @@ where
         Self: Sized,
     {
         self.with(InsertWithData(f))
+    }
+
+    /// Optionally add the [`InsertWithData`] layer with the given [`RefOperator`] constructor.
+    ///
+    /// See [`insert`] for more details.
+    fn insert_if<R, Env, Data, F>(
+        self,
+        enable: bool,
+        f: F,
+    ) -> Stack<Self, OptionalLayer<InsertWithData<F>>>
+    where
+        F: Fn() -> R,
+        R: for<'a> RefOperator<'a, In, Output = (Env, Option<Data>)>,
+        Env: Send + Sync + 'static,
+        Data: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with_if(if enable {
+            Some(InsertWithData(f))
+        } else {
+            None
+        })
     }
 
     /// Add an inspect layer with the given closure.

@@ -237,6 +237,18 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
         self.with(AddData::with_data(data))
     }
 
+    /// Optionally provide data to the context.
+    ///
+    /// If data is `None`, the layer will be skipped,
+    /// so it won't panic if the data is not in the context.
+    fn provide_if<D>(self, data: Option<D>) -> Either<AddDataOperator<D, Self>, Self>
+    where
+        D: Clone + Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with_if(data.map(AddData::with_data))
+    }
+
     /// Provide data to the context with the given data provider.
     fn provide_with<D>(
         self,
@@ -247,6 +259,26 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
         Self: Sized,
     {
         self.with(AddData::new(provider))
+    }
+
+    /// Optionally provide data to the context with the given data provider.
+    ///
+    /// If not enabled, the layer will be skipped,
+    /// so it will not panic if the data is not in the context.
+    fn provide_with_if<D>(
+        self,
+        enable: bool,
+        provider: impl Fn() -> Option<D> + Send + Sync + 'static,
+    ) -> Either<AddDataOperator<D, Self>, Self>
+    where
+        D: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with_if(if enable {
+            Some(AddData::new(provider))
+        } else {
+            None
+        })
     }
 
     /// Declare that the data of type `D` is in the context.

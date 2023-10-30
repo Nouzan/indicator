@@ -22,6 +22,7 @@ use self::{
         data::AddDataOperator,
         insert::{InsertDataOperator, InsertOperator, InsertWithDataOperator},
         inspect::InspectOperator,
+        optional::Either,
         then::ThenOperator,
     },
 };
@@ -35,6 +36,7 @@ pub use self::{
         insert::{Insert, InsertData, InsertWithData},
         inspect::Inspect,
         layer_fn,
+        optional::OptionalLayer,
         then::Then,
         BoxLayer, Layer,
     },
@@ -211,6 +213,16 @@ pub trait ContextOperatorExt<In>: ContextOperator<In> {
         Self: Sized,
     {
         self.with(Then(builder))
+    }
+
+    /// Optionally add a layer.
+    fn with_if<L>(self, layer: Option<L>) -> Either<L::Operator, Self>
+    where
+        L: Layer<In, Self>,
+        L::Operator: ContextOperator<In, Out = Self::Out>,
+        Self: Sized,
+    {
+        self.with(OptionalLayer(layer))
     }
 }
 

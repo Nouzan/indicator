@@ -1,6 +1,6 @@
 use alloc::sync::Arc;
 
-use self::{stack::Stack, then::Then};
+use self::{optional::OptionalLayer, stack::Stack, then::Then};
 
 use super::{
     AddData, BoxContextOperator, Context, ContextOperator, ContextOperatorExt, Insert, InsertData,
@@ -25,6 +25,9 @@ pub mod stack;
 
 /// Then layer.
 pub mod then;
+
+/// Optional layer.
+pub mod optional;
 
 /// Layer.
 /// Convert an [`ContextOperator`] to another [`ContextOperator`]
@@ -180,6 +183,16 @@ where
         Self: Sized,
     {
         self.with(Then(builder))
+    }
+
+    /// Optionally add a layer.
+    fn with_if<L>(self, layer: Option<L>) -> Stack<Self, OptionalLayer<L>>
+    where
+        L: Layer<In, Self::Operator>,
+        L::Operator: ContextOperator<In, Out = Self::Out>,
+        Self: Sized,
+    {
+        self.with(OptionalLayer(layer))
     }
 }
 

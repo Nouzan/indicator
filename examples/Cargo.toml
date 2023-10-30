@@ -47,3 +47,8 @@ required-features = ["context"]
 name = "stack_sugar"
 path = "context/stack_sugar.rs"
 required-features = ["context"]
+
+[[example]]
+name = "optional"
+path = "context/optional.rs"
+required-features = ["context"]

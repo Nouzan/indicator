@@ -100,6 +100,7 @@ impl OperatorFn {
                 type Output = #output_ty;
 
                 fn next(&mut self, __input: #indicator::context::ValueRef<'value, #input_ty>) -> Self::Output {
+                    #[allow(clippy::extra_unused_type_parameters)]
                     #next_fn
                     #return_stmt
                 }

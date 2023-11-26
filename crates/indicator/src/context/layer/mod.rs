@@ -251,7 +251,19 @@ where
     }
 
     /// Declare that the data of type `D` is in the context.
+    // FIXME: this method should be removed in the future.
+    #[allow(clippy::wrong_self_convention)]
+    #[deprecated(note = "use `data_from_context` instead")]
     fn from_context<D>(self) -> Stack<Self, AddData<D>>
+    where
+        D: Send + Sync + 'static,
+        Self: Sized,
+    {
+        self.with(AddData::<D>::from_context())
+    }
+
+    /// Declare that the data of type `D` is in the data context.
+    fn data_from_context<D>(self) -> Stack<Self, AddData<D>>
     where
         D: Send + Sync + 'static,
         Self: Sized,

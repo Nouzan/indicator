@@ -54,7 +54,7 @@ fn main() -> anyhow::Result<()> {
                 println!("previous even count: {}", count.0);
             }
         })
-        .from_context::<&str>() // Asserting that the context has a `&str` data.
+        .data_from_context::<&str>() // Asserting that the context has a `&str` data.
         .provide("This is my data!")
         .insert_data(odds_counter)
         .insert(even_signal::<bool, EvenCount>)

@@ -35,5 +35,5 @@ pub(super) fn get_type_under_reference(ty: &Type) -> Result<&Type> {
             "expected reference type without lifetime and mutability, e.g. `&T`",
         ));
     };
-    Ok(&*target_ty)
+    Ok(target_ty)
 }

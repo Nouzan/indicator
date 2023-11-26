@@ -179,7 +179,7 @@ mod tests {
                 });
                 input.map(|_, ctx| ctx.env().get::<i32>().copied().unwrap())
             })
-            .with(layer_fn(|op| Square(op)))
+            .with(layer_fn(Square))
             .with(Cache::with_length(2.try_into().unwrap()))
             .finish();
 

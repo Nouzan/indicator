@@ -15,20 +15,17 @@ pub mod output;
 use crate::Operator;
 use alloc::boxed::Box;
 
-use self::{
-    anymap::Map,
-    layer::{
-        cache::CacheOperator,
-        data::AddDataOperator,
-        insert::{InsertDataOperator, InsertOperator, InsertWithDataOperator},
-        inspect::InspectOperator,
-        optional::Either,
-        then::ThenOperator,
-    },
+use self::layer::{
+    cache::CacheOperator,
+    data::AddDataOperator,
+    insert::{InsertDataOperator, InsertOperator, InsertWithDataOperator},
+    inspect::InspectOperator,
+    optional::Either,
+    then::ThenOperator,
 };
 
 pub use self::{
-    anymap::Context,
+    anymap::{Context, Map},
     extractor::{Data, Env, In, Prev},
     layer::{
         cache::Cache,

@@ -6,6 +6,7 @@ use super::tickable::Tickable;
 use time::OffsetDateTime;
 
 /// Value with timestamp.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TickValue<T> {
     /// Tick.
@@ -84,5 +85,42 @@ impl<T> Deref for TickValue<T> {
 impl<T> Borrow<T> for TickValue<T> {
     fn borrow(&self) -> &T {
         &self.value
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tick_value() {
+        let tick_value = TickValue::new(OffsetDateTime::UNIX_EPOCH, 42);
+        assert_eq!(tick_value.tick(), Tick::new(OffsetDateTime::UNIX_EPOCH));
+        assert_eq!(tick_value.value(), &42);
+        assert_eq!(tick_value.into_tick_value(), tick_value);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serialize_tick_value() {
+        use time::macros::datetime;
+
+        let tick_value = TickValue::new(datetime!(2021-01-01 00:00:00 UTC), 42);
+        let json = serde_json::to_string(&tick_value).unwrap();
+        assert_eq!(json, r#"{"tick":"2021-01-01T00:00:00Z","value":42}"#);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn deserialize_tick_value() {
+        use time::macros::datetime;
+
+        let json = r#"{"tick":"2021-01-01T00:00:00Z","value":42}"#;
+        let tick_value: TickValue<i32> = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            tick_value.tick(),
+            Tick::new(datetime!(2021-01-01 00:00:00 UTC))
+        );
+        assert_eq!(tick_value.value(), &42);
     }
 }
